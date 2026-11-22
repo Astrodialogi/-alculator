@@ -1,3 +1,12 @@
 
+[project]
+name = "astrodialogi-calculator"
+version = "0.1.0"
+requires-python = ">=3.12"
+dependencies = [
+    "pyswisseph==2.10.3.2",
+    "tzdata>=2025.2"
+]
+
 [tool.vercel]
 entrypoint = "api.calculate:handler"
