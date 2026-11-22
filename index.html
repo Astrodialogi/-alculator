@@ -1,1 +1,174 @@
-<!doctype html><html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#ffffff"><title>Узнай свой Асцендент — Астродиалоги</title><link rel="stylesheet" href="style.css"></head><body><main><header><a class="brand" href="/">АСТРОДИАЛОГИ</a><span>Бесплатный калькулятор</span></header><section class="hero"><p class="eyebrow">НАТАЛЬНАЯ КАРТА</p><h1>Узнай свой <em>Асцендент</em></h1><p>И выясни, по какому знаку смотреть астропрогнозы.</p></section><form id="form"><label>Дата рождения<input id="date" type="date" required></label><label>Время рождения<input id="time" type="time" value="12:00" required></label><label class="check"><input id="unknown" type="checkbox"> Не знаю время рождения</label><p id="timeHelp" class="hint" hidden>Без точного времени нельзя определить Асцендент и дома. Положения планет рассчитать можно; если Луна меняла знак в этот день, покажем оба варианта.</p><label>Город рождения<input id="city" type="search" autocomplete="off" placeholder="Начни вводить город…" required><span class="hint">Выбери город из списка, чтобы учесть координаты и часовой пояс.</span></label><div id="suggestions" role="listbox"></div><p id="selected" class="hint"></p><button type="submit" id="submit">Рассчитать Асцендент</button><p class="error" id="error" role="alert"></p></form><section id="result" hidden aria-live="polite"></section><footer>Расчёты: Swiss Ephemeris · Тропический зодиак · <a href="https://taplink.cc/alisa.astrologia">Консультации</a></footer></main><script src="app.js"></script></body></html>
+
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#ffffff">
+
+  <title>Узнай свой Асцендент — Астродиалоги</title>
+
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+<main>
+
+  <header>
+    <a class="brand" href="/">АСТРОДИАЛОГИ</a>
+    <span>Бесплатный калькулятор</span>
+  </header>
+
+  <section class="hero">
+    <p class="eyebrow">НАТАЛЬНАЯ КАРТА</p>
+    <h1>Узнай свой <em>Асцендент</em></h1>
+    <p>
+      И выясни, по какому знаку смотреть
+      астропрогнозы.
+    </p>
+  </section>
+
+  <form id="form">
+
+    <!-- ДАТА РОЖДЕНИЯ -->
+
+    <div class="birth-fields">
+      <label>Дата рождения</label>
+
+      <div class="birth-date">
+        <input
+          id="day"
+          type="text"
+          inputmode="numeric"
+          maxlength="2"
+          placeholder="ДД"
+          aria-label="День рождения"
+          required
+        >
+
+        <span>.</span>
+
+        <input
+          id="month"
+          type="text"
+          inputmode="numeric"
+          maxlength="2"
+          placeholder="ММ"
+          aria-label="Месяц рождения"
+          required
+        >
+
+        <span>.</span>
+
+        <input
+          id="year"
+          type="text"
+          inputmode="numeric"
+          maxlength="4"
+          placeholder="ГГГГ"
+          aria-label="Год рождения"
+          required
+        >
+      </div>
+    </div>
+
+    <!-- ВРЕМЯ РОЖДЕНИЯ -->
+
+    <div class="birth-fields">
+      <label>Время рождения</label>
+
+      <div class="birth-time">
+        <input
+          id="hour"
+          type="text"
+          inputmode="numeric"
+          maxlength="2"
+          placeholder="ЧЧ"
+          aria-label="Часы рождения"
+          required
+        >
+
+        <span>:</span>
+
+        <input
+          id="minute"
+          type="text"
+          inputmode="numeric"
+          maxlength="2"
+          placeholder="ММ"
+          aria-label="Минуты рождения"
+          required
+        >
+      </div>
+    </div>
+
+    <!-- НЕИЗВЕСТНОЕ ВРЕМЯ -->
+
+    <label class="check">
+      <input id="unknown" type="checkbox">
+      Не знаю время рождения
+    </label>
+
+    <p id="timeHelp" class="hint" hidden>
+      Без точного времени нельзя определить
+      Асцендент и дома. Положения планет
+      рассчитать можно; если Луна меняла
+      знак в этот день, покажем оба варианта.
+    </p>
+
+    <!-- ГОРОД РОЖДЕНИЯ -->
+
+    <label>
+      Город рождения
+
+      <input
+        id="city"
+        type="search"
+        autocomplete="off"
+        placeholder="Начни вводить город…"
+        required
+      >
+
+      <span class="hint">
+        Выбери город из списка, чтобы учесть
+        координаты и часовой пояс.
+      </span>
+    </label>
+
+    <div id="suggestions" role="listbox"></div>
+
+    <p id="selected" class="hint"></p>
+
+    <!-- КНОПКА РАСЧЁТА -->
+
+    <button type="submit" id="submit">
+      Рассчитать Асцендент
+    </button>
+
+    <p class="error" id="error" role="alert"></p>
+
+  </form>
+
+  <!-- РЕЗУЛЬТАТ -->
+
+  <section
+    id="result"
+    hidden
+    aria-live="polite">
+  </section>
+
+  <footer>
+    Расчёты: Swiss Ephemeris ·
+    Тропический зодиак ·
+    <a href="https://taplink.cc/alisa.astrologia">
+      Консультации
+    </a>
+  </footer>
+
+</main>
+
+<script src="app.js"></script>
+
+</body>
+</html>
