@@ -8,5 +8,3 @@ dependencies = [
     "tzdata>=2025.2"
 ]
 
-[tool.vercel]
-entrypoint = "api.calculate:handler"
