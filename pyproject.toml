@@ -7,4 +7,5 @@ dependencies = [
     "pyswisseph==2.10.3.2",
     "tzdata>=2025.2"
 ]
-
+[tool.vercel]
+entrypoint = "api.calculate:handler"
