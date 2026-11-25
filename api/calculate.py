@@ -822,3 +822,529 @@ class handler(BaseHTTPRequestHandler):
                     'Проверьте данные и настройки сервиса.'
                 }
             )
+
+# =========================================
+# ASTRODIALOGI — COSMOGRAM V2
+# РАСЧЁТ БЕЗ ВРЕМЕНИ РОЖДЕНИЯ
+# =========================================
+
+
+def cosmogram_jd(dt):
+
+    dt = dt.astimezone(timezone.utc)
+
+    return swe.julday(
+        dt.year,
+        dt.month,
+        dt.day,
+        dt.hour
+        + dt.minute / 60
+        + dt.second / 3600
+        + dt.microsecond / 3600000000
+    )
+
+
+def cosmogram_position(moment, planet):
+
+    values, _ = swe.calc_ut(
+        cosmogram_jd(moment),
+        planet,
+        swe.FLG_SWIEPH | swe.FLG_SPEED
+    )
+
+    longitude = values[0] % 360
+
+    return {
+        'longitude': longitude,
+        'sign_index': int(longitude // 30),
+        'speed': values[3]
+    }
+
+
+# =========================================
+# ГРАНИЦЫ МЕСТНЫХ СУТОК
+# =========================================
+
+def cosmogram_day_boundary(naive, zone):
+
+    # Учитываем неоднозначное или
+    # несуществующее местное время.
+
+    for minute in range(1441):
+
+        moment = naive + timedelta(
+            minutes=minute
+        )
+
+        valid = []
+
+        for fold in (0, 1):
+
+            aware = moment.replace(
+                tzinfo=zone,
+                fold=fold
+            )
+
+            utc = aware.astimezone(
+                timezone.utc
+            )
+
+            restored = utc.astimezone(
+                zone
+            ).replace(tzinfo=None)
+
+            if restored == moment:
+
+                valid.append(utc)
+
+        if valid:
+
+            return min(valid)
+
+    raise ValueError(
+        'Не удалось определить границы '
+        'местных суток рождения.'
+    )
+
+
+# =========================================
+# ПОИСК МОМЕНТА СТАЦИОНАРНОСТИ
+# =========================================
+
+def cosmogram_station(left, right, planet):
+
+    initial_speed = cosmogram_position(
+        left,
+        planet
+    )['speed']
+
+    initial_direction = initial_speed < 0
+
+    while (
+        right - left
+    ).total_seconds() > 0.1:
+
+        middle = left + (right - left) / 2
+
+        speed = cosmogram_position(
+            middle,
+            planet
+        )['speed']
+
+        if (speed < 0) == initial_direction:
+
+            left = middle
+
+        else:
+
+            right = middle
+
+    return left + (right - left) / 2
+
+
+# =========================================
+# ПОИСК ТОЧНОГО МОМЕНТА ИНГРЕССИИ
+# =========================================
+
+def cosmogram_ingress(
+    left,
+    right,
+    planet,
+    initial_sign
+):
+
+    while (
+        right - left
+    ).total_seconds() > 0.1:
+
+        middle = left + (right - left) / 2
+
+        sign = cosmogram_position(
+            middle,
+            planet
+        )['sign_index']
+
+        if sign == initial_sign:
+
+            left = middle
+
+        else:
+
+            right = middle
+
+    return right
+
+
+# =========================================
+# ПОЛОЖЕНИЕ ПЛАНЕТЫ В ТЕЧЕНИЕ СУТОК
+# =========================================
+
+def cosmogram_planet(
+    start,
+    end,
+    zone,
+    planet
+):
+
+    moments = []
+
+    current = start
+
+    step = timedelta(minutes=15)
+
+    while current < end:
+
+        moments.append(current)
+
+        current += step
+
+    last_moment = end - timedelta(
+        microseconds=1000
+    )
+
+    if last_moment > moments[-1]:
+
+        moments.append(last_moment)
+
+
+    # Проверяем положение и скорость
+    # планеты в каждой точке.
+
+    samples = [
+
+        (
+            moment,
+            cosmogram_position(
+                moment,
+                planet
+            )
+        )
+
+        for moment in moments
+
+    ]
+
+
+    # Добавляем точки стационарности,
+    # чтобы обнаружить возможную смену
+    # знака около разворота планеты.
+
+    stations = []
+
+    for i in range(len(samples) - 1):
+
+        left, a = samples[i]
+
+        right, b = samples[i + 1]
+
+        if (
+            (a['speed'] < 0)
+            !=
+            (b['speed'] < 0)
+        ):
+
+            station = cosmogram_station(
+                left,
+                right,
+                planet
+            )
+
+            stations.append(station)
+
+
+    moments = sorted(
+        set(moments + stations)
+    )
+
+    samples = [
+
+        (
+            moment,
+            cosmogram_position(
+                moment,
+                planet
+            )
+        )
+
+        for moment in moments
+
+    ]
+
+
+    # Все возможные знаки
+    # в хронологическом порядке.
+
+    possible = []
+
+    for _, p in samples:
+
+        sign = SIGNS[p['sign_index']]
+
+        if sign not in possible:
+
+            possible.append(sign)
+
+
+    # Определяем время каждой ингрессии.
+
+    ingresses = []
+
+    for i in range(len(samples) - 1):
+
+        left, a = samples[i]
+
+        right, b = samples[i + 1]
+
+        if (
+            a['sign_index']
+            == b['sign_index']
+        ):
+
+            continue
+
+        moment = cosmogram_ingress(
+            left,
+            right,
+            planet,
+            a['sign_index']
+        )
+
+        local = moment.astimezone(zone)
+
+        after = cosmogram_position(
+            moment,
+            planet
+        )
+
+        ingresses.append({
+
+            'from_sign':
+                SIGNS[a['sign_index']],
+
+            'to_sign':
+                SIGNS[b['sign_index']],
+
+            'local_time':
+                local.strftime('%H:%M'),
+
+            'local_datetime':
+                local.isoformat(
+                    timespec='seconds'
+                ),
+
+            'utc_datetime':
+                moment.isoformat(
+                    timespec='seconds'
+                ),
+
+            'retrograde':
+                after['speed'] < 0
+
+        })
+
+
+    # Проверяем, менялось ли направление
+    # движения планеты в течение суток.
+
+    directions = list(
+
+        dict.fromkeys(
+
+            'retrograde'
+            if p['speed'] < 0
+            else 'direct'
+
+            for _, p in samples
+
+        )
+
+    )
+
+    return {
+
+        'possible_signs': possible,
+
+        'sign_uncertain':
+            len(possible) > 1,
+
+        'degree_approximate': True,
+
+        'ingresses': ingresses,
+
+        'motion_uncertain':
+            len(directions) > 1,
+
+        'possible_motion': directions
+
+    }
+
+
+# =========================================
+# СОХРАНЯЕМ ПРЕЖНИЙ РАСЧЁТ
+# НАТАЛЬНОЙ КАРТЫ
+# =========================================
+
+_compute_natal_original = compute
+
+
+# =========================================
+# УНИВЕРСАЛЬНЫЙ РАСЧЁТ
+# НАТАЛЬНАЯ КАРТА И КОСМОГРАММА
+# =========================================
+
+def compute(data):
+
+    # Если время известно,
+    # используем прежний алгоритм.
+
+    if data.get('time'):
+
+        result = _compute_natal_original(
+            data
+        )
+
+        result['chart_type'] = 'natal'
+
+        return result
+
+
+    # Если время неизвестно,
+    # рассчитываем космограмму.
+
+    date = datetime.strptime(
+        str(data['date']),
+        '%Y-%m-%d'
+    )
+
+    lat = float(data['lat'])
+
+    lng = float(data['lng'])
+
+    if not (
+        -90 <= lat <= 90
+        and
+        -180 <= lng <= 180
+    ):
+
+        raise ValueError(
+            'Некорректные координаты.'
+        )
+
+    zone = ZoneInfo(
+        timezone_at(lat, lng)
+    )
+
+
+    # Начало и конец местных суток.
+
+    start = cosmogram_day_boundary(
+        date,
+        zone
+    )
+
+    end = cosmogram_day_boundary(
+        date + timedelta(days=1),
+        zone
+    )
+
+    if end <= start:
+
+        raise ValueError(
+            'Указанная дата не существовала '
+            'в данном часовом поясе.'
+        )
+
+
+    # Середина суток используется только
+    # как приблизительное положение
+    # для совместимости с интерфейсом.
+
+    reference = start + (end - start) / 2
+
+    jd = cosmogram_jd(reference)
+
+    planets = []
+
+
+    for name, number, glyph in PLANETS:
+
+        approximate = position(
+            jd,
+            number
+        )
+
+        daily = cosmogram_planet(
+            start,
+            end,
+            zone,
+            number
+        )
+
+        item = {
+
+            'name': name,
+
+            'glyph': glyph,
+
+            **approximate,
+
+            **daily,
+
+            'houses': {
+
+                'placidus': None,
+
+                'whole_sign': None,
+
+                'equal': None
+
+            },
+
+            'placidus_house': None,
+
+            'whole_sign_house': None,
+
+            'equal_house': None
+
+        }
+
+        planets.append(item)
+
+
+    return {
+
+        'chart_type': 'cosmogram',
+
+        'timezone': zone.key,
+
+        'time_known': False,
+
+        'planets': planets,
+
+        'ascendant': None,
+
+        'mc': None,
+
+        'houses': None,
+
+        'house_systems': None,
+
+        'default_house_system': None,
+
+        'aspects': [],
+
+        'reference_time':
+
+            reference.astimezone(
+                zone
+            ).isoformat(),
+
+        'birth_date':
+            date.strftime('%Y-%m-%d')
+
+    }
+
+
+# =========================================
+# END — COSMOGRAM V2
+# =========================================
