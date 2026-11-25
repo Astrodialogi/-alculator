@@ -44,6 +44,10 @@ ASSETS = {
         "application/javascript; charset=utf-8",
         "app.js"
     ),
+    "/interpretations.js": (
+        "application/javascript; charset=utf-8",
+        "interpretations.js"
+    ),
 }
 
 
