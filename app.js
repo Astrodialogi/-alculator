@@ -1,4 +1,9 @@
 
+
+
+
+
+
 const $ = id => document.getElementById(id);
 
 let place = null;
@@ -358,10 +363,10 @@ $('city').addEventListener('input', () => {
 
           searchVersion++;
 
-          $('city').value = b.textContent;
+          $('city').value = [p.name, p.country].filter(Boolean).join(', ');
 
           $('selected').textContent =
-            'Город выбран: ' + b.textContent;
+            '';
 
           $('suggestions').replaceChildren();
 
@@ -392,90 +397,41 @@ $('city').addEventListener('input', () => {
 // ТАБЛИЦА ПЛАНЕТ И ТОЧЕК
 // =========================================
 
-function buildPlanetsTable(data) {
-
-  let html = `
-    <table>
-      <tbody>
-  `;
-
+function buildPlanetsTable(data, system) {
+  const systems = data.house_systems || {};
+  const selected = systems[system];
+  let html = '<table><thead><tr><th>Планета</th><th>Положение</th><th>Дом</th></tr></thead><tbody>';
   for (const p of data.planets || []) {
-
-    const sign = p.sign_uncertain
-      ? p.possible_signs.join(' / ')
-      : p.sign;
-
-    const degree = data.time_known
-      ? ' · ' + fmt(p)
-      : '';
-
-    const house =
-      data.time_known &&
-      p.whole_sign_house != null
-        ? ' · ' + p.whole_sign_house + ' дом'
-        : '';
-
-    html += `
-      <tr>
-        <td>
-          ${escapeHTML(p.glyph)}
-          ${escapeHTML(p.name)}
-        </td>
-
-        <td>
-          ${escapeHTML(sign)}
-          ${degree}
-          ${p.retrograde ? ' ℞' : ''}
-          ${house}
-        </td>
-      </tr>
-    `;
-
+    const house = p.houses?.[system] ?? p[system + '_house'];
+    html += `<tr><td>${escapeHTML(p.glyph)} ${escapeHTML(p.name)}</td><td>${escapeHTML(p.sign)} · ${fmt(p)}${p.retrograde ? ' ℞' : ''}</td><td>${house ?? '—'}</td></tr>`;
   }
-
-  if (data.ascendant) {
-
-    html += `
-      <tr>
-        <td>ASC</td>
-        <td>
-          ${escapeHTML(data.ascendant.sign)}
-          · ${fmt(data.ascendant)}
-        </td>
-      </tr>
-    `;
-
+  for (const [name, point] of [['ASC', data.ascendant], ['MC', data.mc]]) {
+    if (point) html += `<tr><td>${name}</td><td>${escapeHTML(point.sign)} · ${fmt(point)}</td><td>—</td></tr>`;
   }
-
-  if (data.mc) {
-
-    html += `
-      <tr>
-        <td>MC</td>
-        <td>
-          ${escapeHTML(data.mc.sign)}
-          · ${fmt(data.mc)}
-        </td>
-      </tr>
-    `;
-
+  html += '</tbody></table>';
+  if (selected?.available && selected.cusps?.length === 12) {
+    html += '<h2>Куспиды домов</h2><table><tbody>';
+    selected.cusps.forEach((c, i) => {
+      html += `<tr><td>${i + 1} дом</td><td>${escapeHTML(c.sign)} · ${fmt(c)}</td></tr>`;
+    });
+    html += '</tbody></table>';
   }
-
-  html += `
-      </tbody>
-    </table>
-
-    <p class="hint">
-      Тропический зодиак.
-      Система домов: Whole Sign
-      (целознаковая система).
-    </p>
-  `;
-
+  html += '<p class="hint">Тропический зодиак. ASC и MC не зависят от выбранной системы домов.</p>';
   return html;
-
 }
 
+function buildHouseSelector(data) {
+  const systems = data.house_systems;
+  if (!systems) return '<p class="hint">Обновление расчётного модуля ещё не доступно. Попробуй позже.</p>';
+  const labels = {placidus: 'Плацидус (Placidus)', whole_sign: 'Целознаковая (Whole Sign)', equal: 'Равнодомная (Equal House)'};
+  const initial = systems.placidus?.available ? 'placidus' : data.default_house_system;
+  return `<label for="houseSystem">Система домов</label>
+    <select id="houseSystem" style="width:100%;padding:12px;border:1px solid #ded3cb;border-radius:10px;background:#fff;color:#222;font:inherit;margin:8px 0 16px">
+      ${Object.entries(labels).map(([key,label]) => `<option value="${key}" ${key === initial ? 'selected' : ''} ${systems[key]?.available ? '' : 'disabled'}>${label}${systems[key]?.available ? '' : ' — недоступна'}</option>`).join('')}
+    </select>
+    ${systems.placidus?.available ? '' : '<p class="hint">Плацидус недоступен для этих координат. Выбери другую систему.</p>'}
+    <div id="houseTables">${buildPlanetsTable(data, initial)}</div>`;
+}
 
 // =========================================
 // ЭКРАН РЕЗУЛЬТАТА
@@ -656,7 +612,7 @@ function showResult(data) {
 
       <h2>Твои планеты и точки</h2>
 
-      ${buildPlanetsTable(data)}
+      ${buildHouseSelector(data)}
 
     </section>
 
@@ -690,6 +646,10 @@ function showResult(data) {
     </section>
 
   `;
+
+  $('houseSystem')?.addEventListener('change', e => {
+    $('houseTables').innerHTML = buildPlanetsTable(data, e.target.value);
+  });
 
   $('calculatorScreen').hidden = true;
 
@@ -842,3 +802,7 @@ $('form').addEventListener('submit', async e => {
   }
 
 });
+
+
+
+
