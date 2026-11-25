@@ -1,8 +1,5 @@
 
-
-
-
-
+// ASTRODIALOGI — UNIVERSAL CALCULATORS V2
 
 const $ = id => document.getElementById(id);
 
@@ -10,6 +7,104 @@ let place = null;
 let timer = null;
 let calculating = false;
 let searchVersion = 0;
+
+// =========================================
+// КАЛЬКУЛЯТОРЫ И НАВИГАЦИЯ
+// =========================================
+
+const pages = {
+  ascendant: 'Асцендент',
+  sun: 'Солнце',
+  moon: 'Луна',
+  mercury: 'Меркурий',
+  venus: 'Венера',
+  mars: 'Марс',
+  jupiter: 'Юпитер',
+  saturn: 'Сатурн',
+  uranus: 'Уран',
+  neptune: 'Нептун',
+  pluto: 'Плутон',
+  mc: 'MC',
+  natal: 'Натальная карта'
+};
+
+const planetKeys = [
+  'sun', 'moon', 'mercury', 'venus',
+  'mars', 'jupiter', 'saturn', 'uranus',
+  'neptune', 'pluto'
+];
+
+const glyphs = {
+  ascendant: 'ASC',
+  sun: '☉',
+  moon: '☽',
+  mercury: '☿',
+  venus: '♀',
+  mars: '♂',
+  jupiter: '♃',
+  saturn: '♄',
+  uranus: '♅',
+  neptune: '♆',
+  pluto: '♇',
+  mc: 'MC'
+};
+
+const route = location.pathname
+  .replace(/^\/+|\/+$/g, '');
+
+const home = !route || route === 'index.html';
+
+const page = Object.prototype.hasOwnProperty.call(
+  pages, route
+) ? route : 'ascendant';
+
+const needsTime = [
+  'ascendant', 'mc', 'natal'
+].includes(page);
+
+const buttonText =
+  page === 'natal'
+    ? 'Построить карту'
+    : 'Рассчитать ' + (
+        page === 'moon' ? 'Луну' :
+        page === 'venus' ? 'Венеру' :
+        pages[page]
+      );
+
+// =========================================
+// СОХРАНЕНИЕ РЕЗУЛЬТАТОВ В БРАУЗЕРЕ
+// =========================================
+
+const storageKey = 'astrodialogi.chart.v2';
+
+let saved = null;
+
+try {
+  saved = JSON.parse(
+    sessionStorage.getItem(storageKey)
+  );
+} catch (_) {}
+
+function persist() {
+  try {
+    sessionStorage.setItem(
+      storageKey,
+      JSON.stringify(saved)
+    );
+  } catch (_) {}
+}
+
+function clearSaved() {
+  saved = null;
+
+  try {
+    sessionStorage.removeItem(storageKey);
+  } catch (_) {}
+}
+
+// =========================================
+// ЗНАКИ ЗОДИАКА
+// =========================================
 
 const zodiac = [
   '♈', '♉', '♊', '♋', '♌', '♍',
@@ -31,75 +126,67 @@ const signNames = [
   'Рыбах'
 ];
 
+// =========================================
+// ОПИСАНИЯ АСЦЕНДЕНТОВ
+// =========================================
+
 const descriptions = [
 
-  // ОВЕН
   {
     ruler: 'Марс',
     text: 'Асцендент в Овне связан с инициативностью, самостоятельностью и стремлением действовать. В новых обстоятельствах такой человек склонен проявлять активность и самостоятельно определять направление движения.'
   },
 
-  // ТЕЛЕЦ
   {
     ruler: 'Венера',
     text: 'Асцендент в Тельце связан со стремлением к устойчивости, определённости и комфорту. Такой человек предпочитает осваивать окружающий мир в собственном темпе, опираясь на практический опыт.'
   },
 
-  // БЛИЗНЕЦЫ
   {
     ruler: 'Меркурий',
     text: 'Асцендент в Близнецах связан с любознательностью, общением и поиском информации. Взаимодействие с окружающим миром происходит через наблюдение, обучение, обмен идеями и установление новых связей.'
   },
 
-  // РАК
   {
     ruler: 'Луна',
     text: 'Асцендент в Раке связан с восприимчивостью к окружающей атмосфере и потребностью в эмоциональной безопасности. В новых обстоятельствах человек может сначала присматриваться к происходящему и только потом включаться в ситуацию.'
   },
 
-  // ЛЕВ
   {
     ruler: 'Солнце',
     text: 'Асцендент во Льве связан со стремлением проявлять индивидуальность, творчески выражать себя и занимать собственное место в окружающем мире.'
   },
 
-  // ДЕВА
   {
     ruler: 'Меркурий',
     text: 'Асцендент в Деве связан с наблюдательностью, вниманием к деталям и стремлением разобраться в устройстве окружающего мира. Такой человек склонен анализировать происходящее и искать практические решения.'
   },
 
-  // ВЕСЫ
   {
     ruler: 'Венера',
     text: 'Асцендент в Весах связан с ориентацией на взаимодействие, сотрудничество и поиск равновесия. Важную роль в восприятии мира могут играть отношения, эстетика и способность учитывать разные точки зрения.'
   },
 
-  // СКОРПИОН
   {
     ruler: 'Марс',
     text: 'Асцендент в Скорпионе связан со стремлением проникать в суть происходящего, исследовать скрытые процессы и проверять границы возможного. Такой человек может внимательно относиться к вопросам доверия и контроля.'
   },
 
-  // СТРЕЛЕЦ
   {
     ruler: 'Юпитер',
     text: 'Асцендент в Стрельце связан со стремлением расширять горизонты, приобретать новый опыт и искать смысл происходящего. Важную роль могут играть путешествия, образование и знакомство с другими культурами.'
   },
 
-  // КОЗЕРОГ
   {
     ruler: 'Сатурн',
     text: 'Асцендент в Козероге связан со стремлением выстраивать собственную жизнь, опираясь на последовательность, ответственность и понимание реальных возможностей. Такой человек может воспринимать окружающий мир через задачи, цели и необходимость постепенно осваивать новые уровни самостоятельности.'
   },
 
-  // ВОДОЛЕЙ
   {
     ruler: 'Сатурн',
     text: 'Асцендент в Водолее связан с самостоятельностью мышления, интересом к устройству общества и стремлением сохранять собственную позицию. Такой человек может искать нестандартные способы взаимодействия с окружающим миром.'
   },
 
-  // РЫБЫ
   {
     ruler: 'Юпитер',
     text: 'Асцендент в Рыбах связан с восприимчивостью, воображением и способностью замечать тонкие особенности окружающей среды. Восприятие происходящего может опираться на образы, ассоциации и эмоциональные впечатления.'
@@ -107,9 +194,46 @@ const descriptions = [
 
 ];
 
-const dateParts = ['day', 'month', 'year'];
-const timeParts = ['hour', 'minute'];
-const allParts = [...dateParts, ...timeParts];
+// =========================================
+// ОБЩИЕ ОПИСАНИЯ ПЛАНЕТ
+// =========================================
+
+const planetAbout = {
+
+  sun: 'В астрологии Солнце связано с индивидуальностью, самовыражением и жизненными целями.',
+
+  moon: 'Луна связана с эмоциональными реакциями, привычками, потребностями и ощущением безопасности.',
+
+  mercury: 'Меркурий связан с мышлением, обучением, восприятием информации и общением.',
+
+  venus: 'Венера связана с ценностями, симпатиями, отношениями и эстетическими предпочтениями.',
+
+  mars: 'Марс связан с активностью, инициативой, мотивацией и способом достижения целей.',
+
+  jupiter: 'Юпитер связан с развитием, расширением возможностей, знаниями и мировоззрением.',
+
+  saturn: 'Сатурн связан с ответственностью, ограничениями, дисциплиной и приобретением опыта.',
+
+  uranus: 'Уран связан с независимостью, обновлением и нестандартными решениями.',
+
+  neptune: 'Нептун связан с воображением, идеалами и восприимчивостью.',
+
+  pluto: 'Плутон связан с глубокими изменениями, властью и вопросами контроля.',
+
+  mc: 'Середина неба, или MC, связана с профессиональной реализацией, общественной ролью и направлением развития.'
+
+};
+
+// Место для будущих авторских интерпретаций.
+
+const interpretations = {
+  signs: {},
+  houses: {}
+};
+
+// =========================================
+// ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ
+// =========================================
 
 function pad(n) {
   return String(n).padStart(2, '0');
@@ -120,7 +244,7 @@ function fmt(p) {
 }
 
 function escapeHTML(s) {
-  return String(s).replace(
+  return String(s ?? '').replace(
     /[&<>"']/g,
     c => ({
       '&': '&amp;',
@@ -132,10 +256,54 @@ function escapeHTML(s) {
   );
 }
 
+function keyFor(name) {
+  return planetKeys.find(
+    key => pages[key] === name
+  );
+}
+
+function link(key, text) {
+
+  if (!key) return escapeHTML(text);
+
+  return `
+    <a href="/${key}"
+       class="planet-link"
+       style="color:#881C2C;text-decoration:underline;text-underline-offset:3px">
+      ${escapeHTML(text)}
+    </a>
+  `;
+}
+
+function known(data) {
+  return data.time_known !== false &&
+    !!data.ascendant;
+}
+
+function getPoint(data) {
+
+  if (page === 'ascendant') {
+    return data.ascendant;
+  }
+
+  if (page === 'mc') {
+    return data.mc;
+  }
+
+  return (data.planets || []).find(
+    p => p.name === pages[page]
+  );
+}
 
 // =========================================
-// АВТОМАТИЧЕСКИЙ ПЕРЕХОД МЕЖДУ ПОЛЯМИ
+// ПОЛЯ ДАТЫ И ВРЕМЕНИ
 // =========================================
+
+const dateParts = ['day', 'month', 'year'];
+
+const timeParts = ['hour', 'minute'];
+
+const allParts = [...dateParts, ...timeParts];
 
 for (const id of allParts) {
 
@@ -149,13 +317,20 @@ for (const id of allParts) {
 
     if (el.value.length === el.maxLength) {
 
-      const index = allParts.indexOf(id);
-      const next = allParts[index + 1];
+      const next =
+        allParts[allParts.indexOf(id) + 1];
 
       if (next && !$(next).disabled) {
+
         $(next).focus();
-      } else if (id === 'minute') {
+
+      } else if (
+        id === 'minute' ||
+        id === 'year'
+      ) {
+
         $('city').focus();
+
       }
 
     }
@@ -164,9 +339,8 @@ for (const id of allParts) {
 
 }
 
-
 // =========================================
-// ПРОВЕРКА ДАТЫ РОЖДЕНИЯ
+// ПРОВЕРКА ДАТЫ
 // =========================================
 
 function getBirthDate() {
@@ -214,17 +388,14 @@ function getBirthDate() {
 
 }
 
-
 // =========================================
-// ПРОВЕРКА ВРЕМЕНИ РОЖДЕНИЯ
+// ПРОВЕРКА ВРЕМЕНИ
 // =========================================
 
 function getBirthTime() {
 
   if ($('unknown').checked) {
-    throw Error(
-      'Для расчёта Асцендента необходимо точное время рождения.'
-    );
+    return null;
   }
 
   const hourText = $('hour').value;
@@ -252,9 +423,8 @@ function getBirthTime() {
 
 }
 
-
 // =========================================
-// НЕИЗВЕСТНОЕ ВРЕМЯ РОЖДЕНИЯ
+// НЕИЗВЕСТНОЕ ВРЕМЯ
 // =========================================
 
 function updateUnknownTime() {
@@ -268,10 +438,20 @@ function updateUnknownTime() {
 
   }
 
-  $('timeHelp').hidden = !yes;
+  $('timeHelp').hidden =
+    !(yes && needsTime);
 
-  $('submit').hidden = yes;
-  $('submit').disabled = yes || calculating;
+  $('unknownTimeNote').hidden =
+    !(yes && !needsTime);
+
+  $('unknownTimeNote').textContent =
+    'Без времени рождения можно определить знак планеты, но не её дом. Если планета меняла знак в течение суток, покажем возможные варианты.';
+
+  $('submit').hidden =
+    yes && needsTime;
+
+  $('submit').disabled =
+    (yes && needsTime) || calculating;
 
   $('error').textContent = '';
 
@@ -284,9 +464,8 @@ $('unknown').addEventListener(
 
 updateUnknownTime();
 
-
 // =========================================
-// ПОИСК ГОРОДА ЧЕРЕЗ GEONAMES
+// ПОИСК ГОРОДА
 // =========================================
 
 $('city').addEventListener('input', () => {
@@ -294,11 +473,13 @@ $('city').addEventListener('input', () => {
   place = null;
 
   $('selected').textContent = '';
+  $('cityHint').hidden = false;
   $('error').textContent = '';
 
   clearTimeout(timer);
 
   const version = ++searchVersion;
+
   const q = $('city').value.trim();
 
   $('suggestions').replaceChildren();
@@ -310,7 +491,8 @@ $('city').addEventListener('input', () => {
     try {
 
       const r = await fetch(
-        '/api/places?q=' + encodeURIComponent(q)
+        '/api/places?q=' +
+        encodeURIComponent(q)
       );
 
       const data = await r.json();
@@ -323,7 +505,8 @@ $('city').addEventListener('input', () => {
       if (!r.ok) {
 
         throw Error(
-          data.error || 'Поиск города недоступен'
+          data.error ||
+          'Поиск города недоступен'
         );
 
       }
@@ -332,7 +515,8 @@ $('city').addEventListener('input', () => {
 
       if (!places.length) {
 
-        const message = document.createElement('p');
+        const message =
+          document.createElement('p');
 
         message.className = 'hint';
 
@@ -347,7 +531,8 @@ $('city').addEventListener('input', () => {
 
       for (const p of places) {
 
-        const b = document.createElement('button');
+        const b =
+          document.createElement('button');
 
         b.type = 'button';
 
@@ -363,12 +548,16 @@ $('city').addEventListener('input', () => {
 
           searchVersion++;
 
-          $('city').value = [p.name, p.country].filter(Boolean).join(', ');
+          $('city').value = [
+            p.name,
+            p.country
+          ].filter(Boolean).join(', ');
 
-          $('selected').textContent =
-            '';
+          $('selected').textContent = '';
 
           $('suggestions').replaceChildren();
+
+          $('cityHint').hidden = true;
 
           $('error').textContent = '';
 
@@ -392,46 +581,446 @@ $('city').addEventListener('input', () => {
 
 });
 
+// =========================================
+// СИСТЕМЫ ДОМОВ
+// =========================================
+
+const labels = {
+
+  placidus: 'Плацидус (Placidus)',
+
+  whole_sign: 'Целознаковая (Whole Sign)',
+
+  equal: 'Равнодомная (Equal House)'
+
+};
+
+function systemFor(data) {
+
+  if (!known(data)) return null;
+
+  const systems = data.house_systems || {};
+
+  return [
+    saved?.system,
+    'placidus',
+    data.default_house_system,
+    ...Object.keys(labels)
+  ].find(
+    key => systems[key]?.available
+  ) || null;
+
+}
+
+function houseFor(p, system) {
+
+  if (!system) return null;
+
+  return p.houses?.[system] ??
+    p[system + '_house'] ??
+    null;
+
+}
+
+function buildHouseSelector(data, system) {
+
+  if (!system || !known(data)) {
+    return '';
+  }
+
+  return `
+
+    <label for="houseSystem">
+      Система домов
+    </label>
+
+    <select id="houseSystem">
+
+      ${Object.entries(labels).map(
+        ([key, label]) => `
+
+          <option
+            value="${key}"
+            ${key === system ? 'selected' : ''}
+            ${data.house_systems[key]?.available
+              ? ''
+              : 'disabled'}>
+
+            ${label}
+
+            ${data.house_systems[key]?.available
+              ? ''
+              : ' — недоступна'}
+
+          </option>
+
+        `
+      ).join('')}
+
+    </select>
+
+    ${data.house_systems.placidus?.available
+      ? ''
+      : '<p class="hint">Плацидус недоступен для этих координат. Выбери другую систему домов.</p>'}
+
+  `;
+
+}
 
 // =========================================
-// ТАБЛИЦА ПЛАНЕТ И ТОЧЕК
+// ФОРМАТ ПОЛОЖЕНИЯ ПЛАНЕТЫ
+// =========================================
+
+function position(p, data) {
+
+  if (p.sign_uncertain) {
+
+    return escapeHTML(
+      (p.possible_signs || []).join(' / ') ||
+      'Знак требует уточнения'
+    );
+
+  }
+
+  return escapeHTML(p.sign) +
+
+    (known(data)
+      ? ' · ' + fmt(p)
+      : '') +
+
+    (known(data) && p.retrograde
+      ? ' ℞'
+      : '');
+
+}
+
+// =========================================
+// КЛИКАБЕЛЬНАЯ ТАБЛИЦА ПЛАНЕТ
 // =========================================
 
 function buildPlanetsTable(data, system) {
-  const systems = data.house_systems || {};
-  const selected = systems[system];
-  let html = '<table><thead><tr><th>Планета</th><th>Положение</th><th>Дом</th></tr></thead><tbody>';
+
+  let html = `
+
+    <table>
+
+      <thead>
+
+        <tr>
+          <th>Планета</th>
+          <th>Положение</th>
+          <th>Дом</th>
+        </tr>
+
+      </thead>
+
+      <tbody>
+
+  `;
+
   for (const p of data.planets || []) {
-    const house = p.houses?.[system] ?? p[system + '_house'];
-    html += `<tr><td>${escapeHTML(p.glyph)} ${escapeHTML(p.name)}</td><td>${escapeHTML(p.sign)} · ${fmt(p)}${p.retrograde ? ' ℞' : ''}</td><td>${house ?? '—'}</td></tr>`;
+
+    const key = keyFor(p.name);
+
+    const house = houseFor(p, system);
+
+    html += `
+
+      <tr>
+
+        <td>
+
+          <span class="planet-glyph">
+            ${escapeHTML(glyphs[key] || p.glyph)}&#xFE0E;
+          </span>
+
+          ${link(key, p.name)}
+
+        </td>
+
+        <td>
+          ${position(p, data)}
+        </td>
+
+        <td>
+          ${house ?? '—'}
+        </td>
+
+      </tr>
+
+    `;
+
   }
-  for (const [name, point] of [['ASC', data.ascendant], ['MC', data.mc]]) {
-    if (point) html += `<tr><td>${name}</td><td>${escapeHTML(point.sign)} · ${fmt(point)}</td><td>—</td></tr>`;
+
+  if (known(data)) {
+
+    for (const [key, name, p] of [
+
+      ['ascendant', 'ASC', data.ascendant],
+
+      ['mc', 'MC', data.mc]
+
+    ]) {
+
+      if (!p) continue;
+
+      html += `
+
+        <tr>
+
+          <td>
+            ${link(key, name)}
+          </td>
+
+          <td>
+            ${position(p, data)}
+          </td>
+
+          <td>—</td>
+
+        </tr>
+
+      `;
+
+    }
+
   }
-  html += '</tbody></table>';
-  if (selected?.available && selected.cusps?.length === 12) {
-    html += '<h2>Куспиды домов</h2><table><tbody>';
-    selected.cusps.forEach((c, i) => {
-      html += `<tr><td>${i + 1} дом</td><td>${escapeHTML(c.sign)} · ${fmt(c)}</td></tr>`;
-    });
-    html += '</tbody></table>';
+
+  html += `
+
+      </tbody>
+
+    </table>
+
+    <p class="hint">
+      Нажми на название планеты или точки,
+      чтобы узнать больше о её положении
+      в твоей натальной карте.
+    </p>
+
+  `;
+
+  const cusps =
+    data.house_systems?.[system]?.cusps;
+
+  if (
+    known(data) &&
+    cusps?.length === 12
+  ) {
+
+    html += `
+
+      <h2>Куспиды домов</h2>
+
+      <table>
+
+        <tbody>
+
+          ${cusps.map((c, i) => `
+
+            <tr>
+
+              <td>${i + 1} дом</td>
+
+              <td>
+                ${position(c, data)}
+              </td>
+
+            </tr>
+
+          `).join('')}
+
+        </tbody>
+
+      </table>
+
+    `;
+
   }
-  html += '<p class="hint">Тропический зодиак. ASC и MC не зависят от выбранной системы домов.</p>';
+
+  html += `
+
+    <p class="hint">
+
+      Тропический зодиак.
+
+      ${known(data)
+        ? 'ASC и MC не зависят от системы домов.'
+        : 'Без времени рождения дома и точные градусы не отображаются.'}
+
+    </p>
+
+  `;
+
   return html;
+
 }
 
-function buildHouseSelector(data) {
-  const systems = data.house_systems;
-  if (!systems) return '<p class="hint">Обновление расчётного модуля ещё не доступно. Попробуй позже.</p>';
-  const labels = {placidus: 'Плацидус (Placidus)', whole_sign: 'Целознаковая (Whole Sign)', equal: 'Равнодомная (Equal House)'};
-  const initial = systems.placidus?.available ? 'placidus' : data.default_house_system;
-  return `<label for="houseSystem">Система домов</label>
-    <select id="houseSystem" style="width:100%;padding:12px;border:1px solid #ded3cb;border-radius:10px;background:#fff;color:#222;font:inherit;margin:8px 0 16px">
-      ${Object.entries(labels).map(([key,label]) => `<option value="${key}" ${key === initial ? 'selected' : ''} ${systems[key]?.available ? '' : 'disabled'}>${label}${systems[key]?.available ? '' : ' — недоступна'}</option>`).join('')}
-    </select>
-    ${systems.placidus?.available ? '' : '<p class="hint">Плацидус недоступен для этих координат. Выбери другую систему.</p>'}
-    <div id="houseTables">${buildPlanetsTable(data, initial)}</div>`;
+// =========================================
+// ТАБЛИЦА АСПЕКТОВ
+// =========================================
+
+function buildAspects(data) {
+
+  if (!known(data)) return '';
+
+  const aspects = data.aspects || [];
+
+  return `
+
+    <section class="planets-card aspects-card">
+
+      <h2>Аспекты</h2>
+
+      ${aspects.length ? `
+
+        <table>
+
+          <thead>
+
+            <tr>
+              <th>Планеты</th>
+              <th>Аспект</th>
+              <th>Орбис</th>
+            </tr>
+
+          </thead>
+
+          <tbody>
+
+            ${aspects.map(a => `
+
+              <tr>
+
+                <td>
+                  ${link(keyFor(a.a), a.a)}
+                  —
+                  ${link(keyFor(a.b), a.b)}
+                </td>
+
+                <td>
+                  ${escapeHTML(a.aspect)}
+                </td>
+
+                <td>
+                  ${Number(a.orb).toFixed(1)}°
+                </td>
+
+              </tr>
+
+            `).join('')}
+
+          </tbody>
+
+        </table>
+
+      ` : `
+
+        <p>
+          Нет аспектов в заданных орбисах.
+        </p>
+
+      `}
+
+    </section>
+
+  `;
+
 }
+
+// =========================================
+// НАВИГАЦИЯ МЕЖДУ ПЛАНЕТАМИ
+// =========================================
+
+function buildPlanetNavigation(data) {
+
+  const keys = known(data)
+    ? ['ascendant', ...planetKeys, 'mc']
+    : planetKeys;
+
+  return `
+
+    <section class="description-card">
+
+      <h2>Другие натальные положения</h2>
+
+      <div class="planet-navigation"
+           style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px">
+
+        ${keys.map(key => `
+
+          <a
+            href="/${key}"
+            class="planet-nav-item ${key === page ? 'active' : ''}"
+            aria-label="${pages[key]}"
+            ${key === page ? 'aria-current="page"' : ''}
+            style="
+              display:flex;
+              flex-direction:column;
+              align-items:center;
+              justify-content:center;
+              gap:5px;
+              min-width:0;
+              padding:12px 2px;
+              border:1px solid #ded3cb;
+              border-radius:12px;
+              text-decoration:none;
+              background:${key === page ? '#881C2C' : '#FFFBF7'};
+              color:${key === page ? '#ffffff' : '#881C2C'};
+            ">
+
+            <span style="font-size:24px">
+              ${glyphs[key]}&#xFE0E;
+            </span>
+
+            <span style="font-size:10px">
+              ${pages[key]}
+            </span>
+
+          </a>
+
+        `).join('')}
+
+      </div>
+
+    </section>
+
+  `;
+
+}
+
+// =========================================
+// КОНСУЛЬТАЦИИ
+// =========================================
+
+const consultation = `
+
+  <section class="description-card">
+
+    <h2>
+      Хочешь разобраться в своей карте глубже?
+    </h2>
+
+    <p>
+
+      На индивидуальной консультации
+      мы можем разобрать твою натальную карту,
+      особенности характера, отношения,
+      профессиональную реализацию
+      или прогноз на ближайший год.
+
+    </p>
+
+    <a class="secondary-button"
+       href="https://taplink.cc/alisa.astrologia">
+
+      Персональные консультации →
+
+    </a>
+
+  </section>
+
+`;
 
 // =========================================
 // ЭКРАН РЕЗУЛЬТАТА
@@ -440,264 +1029,441 @@ function buildHouseSelector(data) {
 function showResult(data) {
 
   const root = $('result');
-  const asc = data.ascendant;
 
-  if (!asc) {
+  let system = systemFor(data);
 
-    throw Error(
-      'Не удалось определить Асцендент. Проверь данные рождения.'
-    );
+  let main = '';
 
-  }
+  // НАТАЛЬНАЯ КАРТА
 
-  const index = Number(asc.sign_index);
-  const description = descriptions[index];
+  if (page === 'natal') {
 
-  if (!description) {
-    throw Error('Не удалось определить знак Асцендента.');
-  }
+    main = `
 
-  const sign = escapeHTML(asc.sign);
-  const signName = signNames[index];
+      <section class="result-card">
 
-  root.innerHTML = `
+        <h2>Твоя натальная карта</h2>
 
-    <button
-      type="button"
-      id="backToCalculator"
-      class="back-button">
+        <p>
+          Положения планет, астрологических
+          точек, домов и аспекты.
+        </p>
 
-      ← Изменить данные
+        ${data.ascendant ? `
 
-    </button>
+          <p class="note">
 
+            Твой Асцендент:
 
-    <!-- КАРТОЧКА АСЦЕНДЕНТА -->
+            ${link(
+              'ascendant',
+              data.ascendant.sign
+            )}
 
-    <section class="result-card">
+            ${fmt(data.ascendant)}
 
-      <div class="result-head">
+          </p>
 
-        <div class="symbol">
-          ${zodiac[index]}&#xFE0E;
+        ` : ''}
+
+      </section>
+
+    `;
+
+  } else {
+
+    // ОТДЕЛЬНАЯ ПЛАНЕТА ИЛИ ТОЧКА
+
+    const p = getPoint(data);
+
+    if (!p) {
+
+      throw Error(
+        'Не удалось определить положение. Проверь данные рождения.'
+      );
+
+    }
+
+    const i = Number(p.sign_index);
+
+    const description = descriptions[i];
+
+    const heading =
+      page === 'ascendant'
+        ? 'ТВОЙ АСЦЕНДЕНТ'
+        : page === 'mc'
+          ? 'ТВОЯ СЕРЕДИНА НЕБА'
+          : pages[page].toUpperCase();
+
+    const sign = p.sign_uncertain
+      ? (p.possible_signs || []).join(' / ')
+      : p.sign;
+
+    const symbol =
+      page === 'ascendant'
+        ? zodiac[i]
+        : glyphs[page];
+
+    main = `
+
+      <section class="result-card">
+
+        <div class="result-head">
+
+          <div class="symbol">
+
+            ${escapeHTML(symbol)}&#xFE0E;
+
+          </div>
+
+          <div>
+
+            <small>${heading}</small>
+
+            <h2>
+              ${escapeHTML(sign || 'Требуется уточнение')}
+            </h2>
+
+            <p>
+
+              ${known(data)
+                ? fmt(p)
+                : 'Без точного времени'}
+
+              ${known(data) && p.retrograde
+                ? ' ℞'
+                : ''}
+
+            </p>
+
+          </div>
+
         </div>
 
-        <div>
+        <p id="planetHouse"
+           class="note"
+           hidden></p>
 
-          <small>ТВОЙ АСЦЕНДЕНТ</small>
+        ${p.sign_uncertain ? `
 
-          <h2>${sign}</h2>
+          <p class="note">
+            Планета меняла знак в течение суток.
+            Для уточнения необходимо время рождения.
+          </p>
 
-          <p>${fmt(asc)}</p>
+        ` : ''}
 
-        </div>
+        ${page === 'ascendant' ? `
 
-      </div>
+          <p class="note">
 
-      <p class="note">
+            Для ежемесячных прогнозов
+            по Асценденту выбирай знак
 
-        Для ежемесячных прогнозов
-        по Асценденту выбирай знак
-        <strong>${sign}</strong>.
+            <strong>
+              ${escapeHTML(p.sign)}
+            </strong>.
 
-      </p>
+          </p>
 
-    </section>
+        ` : ''}
 
+      </section>
 
-    <!-- ОПИСАНИЕ АСЦЕНДЕНТА -->
+    `;
 
-    <section class="description-card">
+    // ОПИСАНИЕ АСЦЕНДЕНТА
 
-      <h2>
-        Асцендент в ${signName}
-      </h2>
+    if (
+      page === 'ascendant' &&
+      description
+    ) {
 
-      <p>
-        ${escapeHTML(description.text)}
-      </p>
+      main += `
 
-      <p>
-
-        <strong>Управитель Асцендента:</strong>
-        ${escapeHTML(description.ruler)}.
-
-      </p>
-
-      <p class="hint">
-
-        Это общая астрологическая характеристика.
-        Для индивидуальной интерпретации важно
-        учитывать положение управителя Асцендента,
-        планеты в первом доме и аспекты.
-
-      </p>
-
-    </section>
-
-
-    <!-- ПРЕДЛОЖЕНИЕ ПОСМОТРЕТЬ ПЛАНЕТЫ -->
-
-    <section class="chart-card">
-
-      <div class="chart-preview">
-
-        <svg
-          class="chart-icon"
-          viewBox="0 0 100 100"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="1.8"
-          aria-hidden="true">
-
-          <circle cx="50" cy="50" r="46"/>
-          <circle cx="50" cy="50" r="32"/>
-          <circle cx="50" cy="50" r="15"/>
-
-          <path d="
-            M50 4V35
-            M50 65V96
-            M4 50H35
-            M65 50H96
-            M27 10L42 37
-            M58 63L73 90
-            M10 27L37 42
-            M63 58L90 73
-            M73 10L58 37
-            M42 63L27 90
-            M90 27L63 42
-            M37 58L10 73
-          "/>
-
-        </svg>
-
-        <div>
+        <section class="description-card">
 
           <h2>
-            Узнай больше о своей натальной карте
+
+            Асцендент
+            ${i === 4 ? 'во' : 'в'}
+            ${signNames[i]}
+
+          </h2>
+
+          <p>
+            ${escapeHTML(description.text)}
+          </p>
+
+          <p>
+
+            <strong>
+              Управитель Асцендента:
+            </strong>
+
+            ${link(
+              keyFor(description.ruler),
+              description.ruler
+            )}.
+
+          </p>
+
+          <p class="hint">
+
+            Это общая астрологическая характеристика.
+            Для индивидуальной интерпретации важно
+            учитывать положение управителя Асцендента,
+            планеты в первом доме и аспекты.
+
+          </p>
+
+        </section>
+
+      `;
+
+    } else {
+
+      // ОБЩЕЕ ОПИСАНИЕ ПЛАНЕТЫ
+
+      main += `
+
+        <section class="description-card">
+
+          <h2>
+
+            ${escapeHTML(pages[page])}
+            в натальной карте
+
           </h2>
 
           <p>
 
-            Посмотри, в каких знаках и домах
-            находятся твои планеты и основные
-            астрологические точки.
+            ${escapeHTML(planetAbout[page] || '')}
 
           </p>
 
-        </div>
+          <div id="planetInterpretation"></div>
 
-      </div>
+        </section>
 
-      <button
-        type="button"
-        id="showPlanets"
-        class="primary-button"
-        aria-expanded="false"
-        aria-controls="planetsPanel">
+      `;
 
-        Посмотреть планеты и точки →
+    }
 
-      </button>
+  }
 
-    </section>
+  const expanded = page === 'natal';
 
+  root.innerHTML = `
 
-    <!-- ПОЛОЖЕНИЯ ПЛАНЕТ -->
+    <button type="button"
+            id="backToCalculator"
+            class="back-button">
 
-    <section
-      id="planetsPanel"
-      class="planets-card"
-      hidden>
+      ← Изменить данные рождения
 
-      <h2>Твои планеты и точки</h2>
+    </button>
 
-      ${buildHouseSelector(data)}
+    ${page !== 'natal' && known(data) ? `
 
-    </section>
+      <a href="/natal"
+         class="back-button"
+         style="display:block;margin-bottom:16px">
 
-
-    <!-- КОНСУЛЬТАЦИЯ -->
-
-    <section class="description-card">
-
-      <h2>
-        Хочешь разобраться в своей карте глубже?
-      </h2>
-
-      <p>
-
-        На индивидуальной консультации
-        мы можем разобрать твою натальную карту,
-        особенности характера, отношения,
-        профессиональную реализацию
-        или прогноз на ближайший год.
-
-      </p>
-
-      <a
-        class="secondary-button"
-        href="https://taplink.cc/alisa.astrologia">
-
-        Персональные консультации →
+        ← Все натальные положения
 
       </a>
 
+    ` : ''}
+
+    ${main}
+
+    <section class="planets-card">
+
+      ${buildHouseSelector(data, system)}
+
+      ${expanded ? '' : `
+
+        <button
+          type="button"
+          id="showPlanets"
+          class="primary-button"
+          aria-expanded="false"
+          aria-controls="planetsPanel">
+
+          Посмотреть планеты и точки →
+
+        </button>
+
+      `}
+
+      <div id="planetsPanel"
+           ${expanded ? '' : 'hidden'}>
+
+        <h2>Твои планеты и точки</h2>
+
+        <div id="houseTables"></div>
+
+      </div>
+
+      ${!expanded && known(data) ? `
+
+        <a href="/natal"
+           class="secondary-button"
+           style="margin-top:12px">
+
+          Вся натальная карта →
+
+        </a>
+
+      ` : ''}
+
     </section>
+
+    ${expanded ? buildAspects(data) : ''}
+
+    ${buildPlanetNavigation(data)}
+
+    ${consultation}
 
   `;
 
-  $('houseSystem')?.addEventListener('change', e => {
-    $('houseTables').innerHTML = buildPlanetsTable(data, e.target.value);
-  });
+  // ОБНОВЛЕНИЕ ДОМОВ И ИНТЕРПРЕТАЦИЙ
 
-  $('calculatorScreen').hidden = true;
+  function refresh() {
 
-  root.hidden = false;
+    $('houseTables').innerHTML =
+      buildPlanetsTable(data, system);
 
+    const note = $('planetHouse');
 
-  // Возвращение к форме
+    const p = getPoint(data);
+
+    const house =
+      p && planetKeys.includes(page)
+        ? houseFor(p, system)
+        : null;
+
+    if (note) {
+
+      note.textContent = house
+        ? `${house} дом · ${labels[system]}`
+        : !known(data)
+          ? 'Без времени рождения дом определить нельзя.'
+          : '';
+
+      note.hidden = !note.textContent;
+
+    }
+
+    const interpretation =
+      $('planetInterpretation');
+
+    if (interpretation && p) {
+
+      const signText =
+        interpretations.signs[page]?.[
+          p.sign_index
+        ];
+
+      const houseText =
+        interpretations.houses[page]?.[
+          house
+        ];
+
+      interpretation.innerHTML = `
+
+        ${signText && !p.sign_uncertain ? `
+
+          <h2>
+            ${escapeHTML(pages[page])}
+            ${Number(p.sign_index) === 4 ? 'во' : 'в'}
+            ${signNames[p.sign_index]}
+          </h2>
+
+          <p>${escapeHTML(signText)}</p>
+
+        ` : ''}
+
+        ${houseText && house ? `
+
+          <h2>
+            ${escapeHTML(pages[page])}
+            в ${house} доме
+          </h2>
+
+          <p>${escapeHTML(houseText)}</p>
+
+        ` : ''}
+
+      `;
+
+    }
+
+  }
+
+  refresh();
+
+  // ПЕРЕКЛЮЧЕНИЕ СИСТЕМ ДОМОВ
+
+  $('houseSystem')?.addEventListener(
+    'change',
+    e => {
+
+      system = e.target.value;
+
+      if (saved) {
+
+        saved.system = system;
+
+        persist();
+
+      }
+
+      refresh();
+
+    }
+  );
+
+  // ВОЗВРАЩЕНИЕ К ФОРМЕ
 
   $('backToCalculator').addEventListener(
     'click',
     () => {
 
+      clearSaved();
+
       root.hidden = true;
 
       $('calculatorScreen').hidden = false;
 
-      window.scrollTo({
-        top: 0,
-        behavior: 'smooth'
-      });
+      window.scrollTo(0, 0);
 
     }
   );
 
+  // ОТКРЫТИЕ ТАБЛИЦЫ ПЛАНЕТ
 
-  // Открытие таблицы планет
-
-  $('showPlanets').addEventListener(
+  $('showPlanets')?.addEventListener(
     'click',
     () => {
 
       const panel = $('planetsPanel');
+
       const button = $('showPlanets');
 
-      const opening = panel.hidden;
-
-      panel.hidden = !opening;
+      panel.hidden = !panel.hidden;
 
       button.setAttribute(
         'aria-expanded',
-        String(opening)
+        String(!panel.hidden)
       );
 
-      button.textContent = opening
-        ? 'Скрыть положения планет'
-        : 'Посмотреть планеты и точки →';
+      button.textContent = panel.hidden
+        ? 'Посмотреть планеты и точки →'
+        : 'Скрыть положения планет';
 
-      if (opening) {
+      if (!panel.hidden) {
 
         panel.scrollIntoView({
           behavior: 'smooth',
@@ -709,99 +1475,280 @@ function showResult(data) {
     }
   );
 
-  window.scrollTo({
-    top: 0,
-    behavior: 'smooth'
-  });
+  $('homeScreen').hidden = true;
+
+  $('calculatorScreen').hidden = true;
+
+  root.hidden = false;
+
+  window.scrollTo(0, 0);
 
 }
 
-
 // =========================================
-// РАСЧЁТ АСЦЕНДЕНТА
+// НАСТРОЙКА СТРАНИЦЫ КАЛЬКУЛЯТОРА
 // =========================================
 
-$('form').addEventListener('submit', async e => {
+function setupPage() {
 
-  e.preventDefault();
+  $('homeScreen').hidden = !home;
 
-  if (calculating || $('unknown').checked) {
-    return;
+  $('calculatorScreen').hidden = home;
+
+  if (home) return;
+
+  document.title =
+    buttonText + ' — Астродиалоги';
+
+  $('submit').textContent = buttonText;
+
+  if (page !== 'ascendant') {
+
+    $('calculatorTitle').textContent =
+      page === 'natal'
+        ? 'Построй свою натальную карту'
+        : buttonText;
+
+    $('calculatorAbout').innerHTML =
+      page === 'natal'
+
+        ? `
+
+          <h2>Что такое натальная карта?</h2>
+
+          <p>
+            Натальная карта показывает положение
+            планет и астрологических точек
+            в момент рождения.
+          </p>
+
+          <p>
+            Здесь ты можешь рассчитать
+            положения планет, дома и аспекты.
+            Результат пока представлен в таблицах.
+          </p>
+
+        `
+
+        : `
+
+          <h2>
+            ${escapeHTML(pages[page])}
+            в натальной карте
+          </h2>
+
+          <p>
+            ${escapeHTML(planetAbout[page] || '')}
+          </p>
+
+          <p>
+
+            Рассчитай положение
+
+            ${page === 'mc'
+              ? 'в знаке зодиака'
+              : 'в знаке зодиака и доме'}
+
+            на момент рождения.
+
+          </p>
+
+        `;
+
+    $('timeHelpTitle').textContent =
+      'Необходимо точное время рождения';
+
+    $('timeHelpDescription').textContent =
+      'Для этого расчёта необходимо знать время рождения.';
+
   }
 
-  $('error').textContent = '';
+  // ВОССТАНОВЛЕНИЕ ДАННЫХ РОЖДЕНИЯ
 
-  const b = $('submit');
+  if (saved?.birth && saved?.place) {
 
-  try {
+    const birth = saved.birth;
 
-    const birthDate = getBirthDate();
-    const birthTime = getBirthTime();
+    const [y, m, d] =
+      birth.date.split('-');
 
-    if (!place) {
+    $('year').value = y;
 
-      throw Error(
-        'Выбери город из выпадающего списка.'
-      );
+    $('month').value = m;
+
+    $('day').value = d;
+
+    $('unknown').checked = !birth.time;
+
+    if (birth.time) {
+
+      const [h, min] =
+        birth.time.split(':');
+
+      $('hour').value = h;
+
+      $('minute').value = min;
 
     }
 
-    calculating = true;
+    place = saved.place;
 
-    b.disabled = true;
+    $('city').value = [
+      place.name,
+      place.country
+    ].filter(Boolean).join(', ');
 
-    $('unknown').disabled = true;
+    $('cityHint').hidden = true;
 
-    b.textContent = 'Рассчитываем…';
+    updateUnknownTime();
 
-    const r = await fetch('/api/calculate', {
+  }
 
-      method: 'POST',
+  // ПОКАЗ ГОТОВОГО РЕЗУЛЬТАТА
 
-      headers: {
-        'Content-Type': 'application/json'
-      },
+  if (
+    saved?.data &&
+    (!needsTime || known(saved.data))
+  ) {
 
-      body: JSON.stringify({
+    try {
 
-        date: birthDate,
-        time: birthTime,
+      showResult(saved.data);
+
+    } catch (e) {
+
+      $('error').textContent = e.message;
+
+    }
+
+  }
+
+}
+
+// =========================================
+// ОТПРАВКА ДАННЫХ НА СЕРВЕР
+// =========================================
+
+$('form').addEventListener(
+  'submit',
+  async e => {
+
+    e.preventDefault();
+
+    if (
+      calculating ||
+      ($('unknown').checked && needsTime)
+    ) return;
+
+    $('error').textContent = '';
+
+    const b = $('submit');
+
+    try {
+
+      const date = getBirthDate();
+
+      const time = getBirthTime();
+
+      if (!place) {
+
+        throw Error(
+          'Выбери город из выпадающего списка.'
+        );
+
+      }
+
+      calculating = true;
+
+      b.disabled = true;
+
+      $('unknown').disabled = true;
+
+      b.textContent = 'Рассчитываем…';
+
+      const birth = {
+
+        date,
+
+        time,
+
         lat: place.lat,
+
         lng: place.lng
 
-      })
+      };
 
-    });
+      const r = await fetch(
+        '/api/calculate',
+        {
 
-    const data = await r.json();
+          method: 'POST',
 
-    if (!r.ok) {
+          headers: {
+            'Content-Type': 'application/json'
+          },
 
-      throw Error(
-        data.error || 'Ошибка расчёта'
+          body: JSON.stringify(birth)
+
+        }
       );
+
+      const data = await r.json();
+
+      if (!r.ok) {
+
+        throw Error(
+          data.error || 'Ошибка расчёта'
+        );
+
+      }
+
+      if (!time && known(data)) {
+
+        throw Error(
+          'Расчёт без времени рождения пока недоступен.'
+        );
+
+      }
+
+      saved = {
+
+        birth,
+
+        place,
+
+        data,
+
+        system: systemFor(data)
+
+      };
+
+      showResult(data);
+
+      persist();
+
+    } catch (err) {
+
+      $('error').textContent = err.message;
+
+    } finally {
+
+      calculating = false;
+
+      $('unknown').disabled = false;
+
+      b.disabled =
+        $('unknown').checked && needsTime;
+
+      b.textContent = buttonText;
 
     }
 
-    showResult(data);
-
-  } catch (err) {
-
-    $('error').textContent = err.message;
-
-  } finally {
-
-    calculating = false;
-
-    $('unknown').disabled = false;
-
-    b.disabled = $('unknown').checked;
-
-    b.textContent = 'Рассчитать Асцендент';
-
   }
+);
 
-});
+// =========================================
+// ЗАПУСК ПРИЛОЖЕНИЯ
+// =========================================
 
-
-
+setupPage();
