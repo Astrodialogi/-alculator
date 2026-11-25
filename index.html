@@ -3,172 +3,395 @@
 <html lang="ru">
 <head>
   <meta charset="utf-8">
+
   <meta name="viewport"
         content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#ffffff">
+
+  <meta name="theme-color" content="#F8F1EB">
+
+  <meta name="description"
+        content="Бесплатный калькулятор Асцендента. Узнай свой восходящий знак по дате, времени и месту рождения.">
 
   <title>Узнай свой Асцендент — Астродиалоги</title>
 
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="/style.css">
 </head>
 
 <body>
-<main>
 
-  <header>
-    <a class="brand" href="/">АСТРОДИАЛОГИ</a>
-    <span>Бесплатный калькулятор</span>
+  <!-- ШАПКА САЙТА -->
+
+  <header class="site-header">
+    <div class="header-inner">
+
+      <a class="brand" href="/">
+        Астродиалоги
+      </a>
+
+      <details class="navigation">
+        <summary aria-label="Открыть меню">
+          <svg width="26" height="26"
+               viewBox="0 0 24 24"
+               fill="none"
+               stroke="currentColor"
+               stroke-width="2"
+               stroke-linecap="round">
+            <path d="M3 5h18M3 12h18M3 19h18"/>
+          </svg>
+        </summary>
+
+        <nav class="menu">
+          <a href="/">Калькулятор Асцендента</a>
+
+          <a href="https://taplink.cc/alisa.astrologia">
+            Консультации
+          </a>
+        </nav>
+      </details>
+
+    </div>
   </header>
 
-  <section class="hero">
-    <p class="eyebrow">НАТАЛЬНАЯ КАРТА</p>
-    <h1>Узнай свой <em>Асцендент</em></h1>
-    <p>
-      И выясни, по какому знаку смотреть
-      астропрогнозы.
-    </p>
-  </section>
+  <main>
 
-  <form id="form">
+    <!-- ГЛАВНЫЙ ЭКРАН -->
 
-    <!-- ДАТА РОЖДЕНИЯ -->
+    <section id="calculatorScreen">
 
-    <div class="birth-fields">
-      <label>Дата рождения</label>
+      <section class="hero">
+        <h1>Узнай свой <em>Асцендент</em></h1>
+      </section>
 
-      <div class="birth-date">
-        <input
-          id="day"
-          type="text"
-          inputmode="numeric"
-          maxlength="2"
-          placeholder="ДД"
-          aria-label="День рождения"
-          required
-        >
+      <!-- КАРТОЧКА КАЛЬКУЛЯТОРА -->
 
-        <span>.</span>
+      <form id="form" class="calculator-card">
 
-        <input
-          id="month"
-          type="text"
-          inputmode="numeric"
-          maxlength="2"
-          placeholder="ММ"
-          aria-label="Месяц рождения"
-          required
-        >
+        <!-- ДАТА РОЖДЕНИЯ -->
 
-        <span>.</span>
+        <div class="birth-fields">
 
-        <input
-          id="year"
-          type="text"
-          inputmode="numeric"
-          maxlength="4"
-          placeholder="ГГГГ"
-          aria-label="Год рождения"
-          required
-        >
-      </div>
-    </div>
+          <div class="field-heading">
 
-    <!-- ВРЕМЯ РОЖДЕНИЯ -->
+            <svg class="field-icon"
+                 viewBox="0 0 24 24"
+                 fill="none"
+                 stroke="currentColor"
+                 stroke-width="1.8"
+                 stroke-linecap="round"
+                 stroke-linejoin="round">
 
-    <div class="birth-fields">
-      <label>Время рождения</label>
+              <rect x="3" y="5"
+                    width="18" height="16" rx="3"/>
 
-      <div class="birth-time">
-        <input
-          id="hour"
-          type="text"
-          inputmode="numeric"
-          maxlength="2"
-          placeholder="ЧЧ"
-          aria-label="Часы рождения"
-          required
-        >
+              <path d="M16 3v4M8 3v4M3 10h18"/>
 
-        <span>:</span>
+            </svg>
 
-        <input
-          id="minute"
-          type="text"
-          inputmode="numeric"
-          maxlength="2"
-          placeholder="ММ"
-          aria-label="Минуты рождения"
-          required
-        >
-      </div>
-    </div>
+            <span>Дата рождения</span>
 
-    <!-- НЕИЗВЕСТНОЕ ВРЕМЯ -->
+          </div>
 
-    <label class="check">
-      <input id="unknown" type="checkbox">
-      Не знаю время рождения
-    </label>
+          <div class="birth-date">
 
-    <p id="timeHelp" class="hint" hidden>
-      Без точного времени нельзя определить
-      Асцендент и дома. Положения планет
-      рассчитать можно; если Луна меняла
-      знак в этот день, покажем оба варианта.
-    </p>
+            <input
+              id="day"
+              type="text"
+              inputmode="numeric"
+              maxlength="2"
+              placeholder="ДД"
+              aria-label="День рождения"
+              required
+            >
 
-    <!-- ГОРОД РОЖДЕНИЯ -->
+            <span>.</span>
 
-    <label>
-      Город рождения
+            <input
+              id="month"
+              type="text"
+              inputmode="numeric"
+              maxlength="2"
+              placeholder="ММ"
+              aria-label="Месяц рождения"
+              required
+            >
 
-      <input
-        id="city"
-        type="search"
-        autocomplete="off"
-        placeholder="Начни вводить город…"
-        required
-      >
+            <span>.</span>
 
-      <span class="hint">
-        Выбери город из списка, чтобы учесть
-        координаты и часовой пояс.
-      </span>
-    </label>
+            <input
+              id="year"
+              type="text"
+              inputmode="numeric"
+              maxlength="4"
+              placeholder="ГГГГ"
+              aria-label="Год рождения"
+              required
+            >
 
-    <div id="suggestions" role="listbox"></div>
+          </div>
+        </div>
 
-    <p id="selected" class="hint"></p>
+        <!-- ВРЕМЯ РОЖДЕНИЯ -->
 
-    <!-- КНОПКА РАСЧЁТА -->
+        <div class="birth-fields">
 
-    <button type="submit" id="submit">
-      Рассчитать Асцендент
-    </button>
+          <div class="field-heading">
 
-    <p class="error" id="error" role="alert"></p>
+            <svg class="field-icon"
+                 viewBox="0 0 24 24"
+                 fill="none"
+                 stroke="currentColor"
+                 stroke-width="1.8"
+                 stroke-linecap="round"
+                 stroke-linejoin="round">
 
-  </form>
+              <circle cx="12" cy="12" r="9"/>
+              <path d="M12 7v5l4 3"/>
 
-  <!-- РЕЗУЛЬТАТ -->
+            </svg>
 
-  <section
-    id="result"
-    hidden
-    aria-live="polite">
-  </section>
+            <span>Время рождения</span>
 
-  <footer>
-    Расчёты: Swiss Ephemeris ·
-    Тропический зодиак ·
-    <a href="https://taplink.cc/alisa.astrologia">
-      Консультации
-    </a>
-  </footer>
+          </div>
 
-</main>
+          <div class="birth-time">
 
-<script src="app.js"></script>
+            <input
+              id="hour"
+              type="text"
+              inputmode="numeric"
+              maxlength="2"
+              placeholder="ЧЧ"
+              aria-label="Часы рождения"
+              required
+            >
+
+            <span>:</span>
+
+            <input
+              id="minute"
+              type="text"
+              inputmode="numeric"
+              maxlength="2"
+              placeholder="ММ"
+              aria-label="Минуты рождения"
+              required
+            >
+
+          </div>
+        </div>
+
+        <!-- НЕИЗВЕСТНОЕ ВРЕМЯ -->
+
+        <label class="check">
+
+          <input id="unknown" type="checkbox">
+
+          <span>Я не знаю своё время рождения</span>
+
+        </label>
+
+        <!-- ГОРОД РОЖДЕНИЯ -->
+
+        <div class="city-fields">
+
+          <label for="city" class="field-heading">
+
+            <svg class="field-icon"
+                 viewBox="0 0 24 24"
+                 fill="none"
+                 stroke="currentColor"
+                 stroke-width="1.8"
+                 stroke-linecap="round"
+                 stroke-linejoin="round">
+
+              <path d="M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 1 1 16 0z"/>
+
+              <circle cx="12" cy="10" r="2.5"/>
+
+            </svg>
+
+            <span>Город рождения</span>
+
+          </label>
+
+          <input
+            id="city"
+            type="search"
+            autocomplete="off"
+            placeholder="Начни вводить город…"
+            required
+          >
+
+          <div id="suggestions"
+               role="listbox"></div>
+
+          <p id="selected" class="hint"></p>
+
+          <p class="hint">
+            Выбери город из предложенного списка.
+          </p>
+
+        </div>
+
+        <!-- КНОПКА РАСЧЁТА -->
+
+        <button type="submit"
+                id="submit"
+                class="primary-button">
+
+          Рассчитать Асцендент
+
+        </button>
+
+        <!-- СООБЩЕНИЕ О НЕИЗВЕСТНОМ ВРЕМЕНИ -->
+
+        <div id="timeHelp"
+             class="unknown-card"
+             aria-live="polite"
+             hidden>
+
+          <div class="notice-icon">
+
+            <svg width="32" height="32"
+                 viewBox="0 0 24 24"
+                 fill="none"
+                 stroke="currentColor"
+                 stroke-width="1.8"
+                 stroke-linecap="round">
+
+              <circle cx="12" cy="12" r="10"/>
+              <path d="M12 7v6M12 17h.01"/>
+
+            </svg>
+
+          </div>
+
+          <h2>
+            Рассчитать Асцендент не получится
+          </h2>
+
+          <p>
+            Для расчёта Асцендента необходимо
+            знать точное время рождения.
+          </p>
+
+          <p>
+            Попробуй уточнить время рождения
+            у ближайших родственников.
+          </p>
+
+          <p>
+            Если это не удастся, я могу помочь
+            с уточнением времени рождения
+            с помощью астрологической ректификации.
+          </p>
+
+          <a class="primary-button contact-button"
+             href="https://taplink.cc/alisa.astrologia">
+
+            Написать мне →
+
+          </a>
+
+        </div>
+
+        <p class="error"
+           id="error"
+           role="alert"></p>
+
+      </form>
+
+      <!-- ИНФОРМАЦИЯ ОБ АСЦЕНДЕНТЕ -->
+
+      <section class="about-ascendant">
+
+        <h2>Что такое Асцендент?</h2>
+
+        <p>
+          Асцендент — это точка зодиака,
+          восходившая на восточном горизонте
+          в момент твоего рождения.
+        </p>
+
+        <p>
+          В астрологии Асцендент связан с тем,
+          как мы проявляем себя в окружающем мире,
+          воспринимаем происходящее и взаимодействуем
+          с другими людьми.
+        </p>
+
+        <p>
+          Асцендент также определяет начало
+          первого дома натальной карты
+          и помогает понять её структуру.
+        </p>
+
+        <div class="forecast-note">
+
+          <svg class="field-icon"
+               viewBox="0 0 24 24"
+               fill="none"
+               stroke="currentColor"
+               stroke-width="1.8"
+               stroke-linecap="round"
+               stroke-linejoin="round">
+
+            <rect x="3" y="5"
+                  width="18" height="16" rx="3"/>
+
+            <path d="M16 3v4M8 3v4M3 10h18"/>
+
+          </svg>
+
+          <div>
+
+            <strong>Зачем знать свой Асцендент?</strong>
+
+            <p>
+              Зная свой восходящий знак,
+              ты сможешь правильно выбирать
+              ежемесячные и годовые астропрогнозы,
+              составленные по Асценденту.
+            </p>
+
+          </div>
+
+        </div>
+
+      </section>
+
+    </section>
+
+    <!-- ЭКРАН РЕЗУЛЬТАТА -->
+
+    <section
+      id="result"
+      class="result-screen"
+      aria-live="polite"
+      hidden>
+    </section>
+
+    <!-- ПОДВАЛ САЙТА -->
+
+    <footer>
+
+      <a class="footer-brand" href="/">
+        Астродиалоги
+      </a>
+
+      <p>
+        Swiss Ephemeris · Тропический зодиак
+      </p>
+
+      <a href="https://taplink.cc/alisa.astrologia">
+        Персональные консультации
+      </a>
+
+    </footer>
+
+  </main>
+
+  <script src="/app.js"></script>
 
 </body>
 </html>
