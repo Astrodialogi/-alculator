@@ -2,6 +2,7 @@
 <!doctype html>
 <html lang="ru">
 <head>
+
   <meta charset="utf-8">
 
   <meta name="viewport"
@@ -10,11 +11,18 @@
   <meta name="theme-color" content="#F8F1EB">
 
   <meta name="description"
-        content="Бесплатный калькулятор Асцендента. Узнай свой восходящий знак по дате, времени и месту рождения.">
+        content="Бесплатные астрологические калькуляторы. Рассчитай Асцендент, положения планет и свою натальную карту.">
 
-  <title>Узнай свой Асцендент — Астродиалоги</title>
+  <title>Астрологические калькуляторы — Астродиалоги</title>
 
   <link rel="stylesheet" href="/style.css">
+
+  <style>
+    [hidden] {
+      display: none !important;
+    }
+  </style>
+
 </head>
 
 <body>
@@ -22,6 +30,7 @@
   <!-- ШАПКА САЙТА -->
 
   <header class="site-header">
+
     <div class="header-inner">
 
       <a class="brand" href="/">
@@ -29,40 +38,396 @@
       </a>
 
       <details class="navigation">
+
         <summary aria-label="Открыть меню">
+
           <svg width="26" height="26"
                viewBox="0 0 24 24"
                fill="none"
                stroke="currentColor"
                stroke-width="2"
                stroke-linecap="round">
+
             <path d="M3 5h18M3 12h18M3 19h18"/>
+
           </svg>
+
         </summary>
 
         <nav class="menu">
-          <a href="/">Калькулятор Асцендента</a>
+
+          <a href="/">
+            Все калькуляторы
+          </a>
+
+          <a href="/natal">
+            Натальная карта
+          </a>
+
+          <a href="/ascendant">
+            Асцендент
+          </a>
+
+          <a href="/moon">
+            Луна
+          </a>
+
+          <a href="/venus">
+            Венера
+          </a>
+
+          <a href="/mars">
+            Марс
+          </a>
+
+          <a href="/saturn">
+            Сатурн
+          </a>
 
           <a href="https://taplink.cc/alisa.astrologia">
             Консультации
           </a>
+
         </nav>
+
       </details>
 
     </div>
+
   </header>
 
   <main>
 
-    <!-- ГЛАВНЫЙ ЭКРАН -->
+    <!-- ГЛАВНАЯ СТРАНИЦА -->
+
+    <section id="homeScreen" hidden>
+
+      <section class="hero catalog-hero">
+
+        <h1>
+          Астрологические
+          <em>калькуляторы</em>
+        </h1>
+
+        <p>
+          Познакомься со своей натальной картой
+          и узнай больше о себе.
+        </p>
+
+      </section>
+
+      <!-- НАТАЛЬНАЯ КАРТА -->
+
+      <section class="natal-feature">
+
+        <div class="natal-feature-content">
+
+          <div class="natal-feature-icon">
+
+            <svg viewBox="0 0 120 120"
+                 width="100"
+                 height="100"
+                 fill="none"
+                 stroke="currentColor"
+                 stroke-width="1.2"
+                 aria-hidden="true">
+
+              <circle cx="60" cy="60" r="55"/>
+              <circle cx="60" cy="60" r="42"/>
+              <circle cx="60" cy="60" r="26"/>
+
+              <path d="
+                M5 60H34
+                M86 60H115
+                M60 5V34
+                M60 86V115
+                M12.37 32.5L37.48 47
+                M82.52 73L107.63 87.5
+                M32.5 12.37L47 37.48
+                M73 82.52L87.5 107.63
+                M87.5 12.37L73 37.48
+                M47 82.52L32.5 107.63
+                M107.63 32.5L82.52 47
+                M37.48 73L12.37 87.5
+              "/>
+
+              <path d="M34 60L73 37.48L82.52 73Z"
+                    stroke="#881C2C"/>
+
+              <path d="M47 37.48L73 82.52"
+                    stroke="#58768B"/>
+
+            </svg>
+
+          </div>
+
+          <div>
+
+            <h2>
+              Построить натальную карту
+            </h2>
+
+            <p>
+              Все планеты, дома, аспекты
+              и основные астрологические точки.
+            </p>
+
+          </div>
+
+        </div>
+
+        <a href="/natal"
+           class="primary-button">
+
+          Построить карту →
+
+        </a>
+
+      </section>
+
+      <!-- КАТАЛОГ КАЛЬКУЛЯТОРОВ -->
+
+      <section class="calculator-catalog">
+
+        <h2>
+          Узнай свои натальные положения
+        </h2>
+
+        <div class="catalog-grid">
+
+          <a href="/ascendant"
+             class="catalog-card">
+
+            <span class="catalog-symbol">
+              ASC
+            </span>
+
+            <h3>Асцендент</h3>
+
+            <span class="catalog-action">
+              Рассчитать →
+            </span>
+
+          </a>
+
+          <a href="/sun"
+             class="catalog-card">
+
+            <span class="catalog-symbol">
+              ☉&#xFE0E;
+            </span>
+
+            <h3>Солнце</h3>
+
+            <span class="catalog-action">
+              Рассчитать →
+            </span>
+
+          </a>
+
+          <a href="/moon"
+             class="catalog-card">
+
+            <span class="catalog-symbol">
+              ☽&#xFE0E;
+            </span>
+
+            <h3>Луна</h3>
+
+            <span class="catalog-action">
+              Рассчитать →
+            </span>
+
+          </a>
+
+          <a href="/mercury"
+             class="catalog-card">
+
+            <span class="catalog-symbol">
+              ☿&#xFE0E;
+            </span>
+
+            <h3>Меркурий</h3>
+
+            <span class="catalog-action">
+              Рассчитать →
+            </span>
+
+          </a>
+
+          <a href="/venus"
+             class="catalog-card">
+
+            <span class="catalog-symbol">
+              ♀&#xFE0E;
+            </span>
+
+            <h3>Венера</h3>
+
+            <span class="catalog-action">
+              Рассчитать →
+            </span>
+
+          </a>
+
+          <a href="/mars"
+             class="catalog-card">
+
+            <span class="catalog-symbol">
+              ♂&#xFE0E;
+            </span>
+
+            <h3>Марс</h3>
+
+            <span class="catalog-action">
+              Рассчитать →
+            </span>
+
+          </a>
+
+          <a href="/jupiter"
+             class="catalog-card">
+
+            <span class="catalog-symbol">
+              ♃&#xFE0E;
+            </span>
+
+            <h3>Юпитер</h3>
+
+            <span class="catalog-action">
+              Рассчитать →
+            </span>
+
+          </a>
+
+          <a href="/saturn"
+             class="catalog-card">
+
+            <span class="catalog-symbol">
+              ♄&#xFE0E;
+            </span>
+
+            <h3>Сатурн</h3>
+
+            <span class="catalog-action">
+              Рассчитать →
+            </span>
+
+          </a>
+
+          <a href="/uranus"
+             class="catalog-card">
+
+            <span class="catalog-symbol">
+              ♅&#xFE0E;
+            </span>
+
+            <h3>Уран</h3>
+
+            <span class="catalog-action">
+              Рассчитать →
+            </span>
+
+          </a>
+
+          <a href="/neptune"
+             class="catalog-card">
+
+            <span class="catalog-symbol">
+              ♆&#xFE0E;
+            </span>
+
+            <h3>Нептун</h3>
+
+            <span class="catalog-action">
+              Рассчитать →
+            </span>
+
+          </a>
+
+          <a href="/pluto"
+             class="catalog-card">
+
+            <span class="catalog-symbol">
+              ♇&#xFE0E;
+            </span>
+
+            <h3>Плутон</h3>
+
+            <span class="catalog-action">
+              Рассчитать →
+            </span>
+
+          </a>
+
+          <a href="/mc"
+             class="catalog-card">
+
+            <span class="catalog-symbol">
+              MC
+            </span>
+
+            <h3>Середина неба</h3>
+
+            <span class="catalog-action">
+              Рассчитать →
+            </span>
+
+          </a>
+
+        </div>
+
+      </section>
+
+      <!-- КОНСУЛЬТАЦИИ -->
+
+      <section class="description-card catalog-consultation">
+
+        <h2>
+          Хочешь разобраться в своей карте глубже?
+        </h2>
+
+        <p>
+          На индивидуальной консультации
+          мы можем разобрать твою натальную карту,
+          отношения, профессиональную реализацию
+          или прогноз на ближайший год.
+        </p>
+
+        <a class="secondary-button"
+           href="https://taplink.cc/alisa.astrologia">
+
+          Персональные консультации →
+
+        </a>
+
+      </section>
+
+    </section>
+
+    <!-- УНИВЕРСАЛЬНЫЙ ЭКРАН КАЛЬКУЛЯТОРА -->
 
     <section id="calculatorScreen">
 
+      <a href="/"
+         id="backToCatalog"
+         class="back-button">
+
+        ← Все калькуляторы
+
+      </a>
+
       <section class="hero">
-        <h1>Узнай свой <em>Асцендент</em></h1>
+
+        <h1 id="calculatorTitle">
+          Узнай свой <em>Асцендент</em>
+        </h1>
+
+        <p id="calculatorSubtitle" hidden></p>
+
       </section>
 
-      <!-- КАРТОЧКА КАЛЬКУЛЯТОРА -->
+      <!-- ФОРМА ВВОДА ДАННЫХ -->
 
       <form id="form" class="calculator-card">
 
@@ -128,6 +493,7 @@
             >
 
           </div>
+
         </div>
 
         <!-- ВРЕМЯ РОЖДЕНИЯ -->
@@ -178,6 +544,7 @@
             >
 
           </div>
+
         </div>
 
         <!-- НЕИЗВЕСТНОЕ ВРЕМЯ -->
@@ -189,6 +556,11 @@
           <span>Я не знаю своё время рождения</span>
 
         </label>
+
+        <p id="unknownTimeNote"
+           class="hint"
+           hidden>
+        </p>
 
         <!-- ГОРОД РОЖДЕНИЯ -->
 
@@ -225,10 +597,14 @@
           <div id="suggestions"
                role="listbox"></div>
 
-          <p id="selected" class="hint"></p>
+          <p id="selected"
+             class="hint"></p>
 
-          <p class="hint">
+          <p id="cityHint"
+             class="hint">
+
             Выбери город из предложенного списка.
+
           </p>
 
         </div>
@@ -243,7 +619,7 @@
 
         </button>
 
-        <!-- СООБЩЕНИЕ О НЕИЗВЕСТНОМ ВРЕМЕНИ -->
+        <!-- ЕСЛИ ВРЕМЯ НЕИЗВЕСТНО -->
 
         <div id="timeHelp"
              class="unknown-card"
@@ -266,24 +642,30 @@
 
           </div>
 
-          <h2>
+          <h2 id="timeHelpTitle">
             Рассчитать Асцендент не получится
           </h2>
 
-          <p>
+          <p id="timeHelpDescription">
+
             Для расчёта Асцендента необходимо
             знать точное время рождения.
+
           </p>
 
           <p>
+
             Попробуй уточнить время рождения
             у ближайших родственников.
+
           </p>
 
           <p>
+
             Если это не удастся, я могу помочь
             с уточнением времени рождения
             с помощью астрологической ректификации.
+
           </p>
 
           <a class="primary-button contact-button"
@@ -301,29 +683,36 @@
 
       </form>
 
-      <!-- ИНФОРМАЦИЯ ОБ АСЦЕНДЕНТЕ -->
+      <!-- ИНФОРМАЦИЯ О ВЫБРАННОМ КАЛЬКУЛЯТОРЕ -->
 
-      <section class="about-ascendant">
+      <section id="calculatorAbout"
+               class="about-ascendant">
 
         <h2>Что такое Асцендент?</h2>
 
         <p>
+
           Асцендент — это точка зодиака,
           восходившая на восточном горизонте
           в момент твоего рождения.
+
         </p>
 
         <p>
+
           В астрологии Асцендент связан с тем,
           как мы проявляем себя в окружающем мире,
           воспринимаем происходящее и взаимодействуем
           с другими людьми.
+
         </p>
 
         <p>
-          Асцендент также определяет начало
-          первого дома натальной карты
-          и помогает понять её структуру.
+
+          Асцендент связан с первым домом
+          натальной карты и помогает
+          понять её структуру.
+
         </p>
 
         <div class="forecast-note">
@@ -345,13 +734,17 @@
 
           <div>
 
-            <strong>Зачем знать свой Асцендент?</strong>
+            <strong>
+              Зачем знать свой Асцендент?
+            </strong>
 
             <p>
+
               Зная свой восходящий знак,
               ты сможешь правильно выбирать
               ежемесячные и годовые астропрогнозы,
               составленные по Асценденту.
+
             </p>
 
           </div>
@@ -383,6 +776,10 @@
         Swiss Ephemeris · Тропический зодиак
       </p>
 
+      <a href="/">
+        Все калькуляторы
+      </a>
+
       <a href="https://taplink.cc/alisa.astrologia">
         Персональные консультации
       </a>
@@ -390,6 +787,28 @@
     </footer>
 
   </main>
+
+  <!-- ВЫБОР ГЛАВНОЙ СТРАНИЦЫ -->
+
+  <script>
+
+    (function () {
+
+      const path =
+        window.location.pathname.replace(/\/+$/, "") || "/";
+
+      const isHome =
+        path === "/" || path === "/index.html";
+
+      document.getElementById("homeScreen").hidden =
+        !isHome;
+
+      document.getElementById("calculatorScreen").hidden =
+        isHome;
+
+    })();
+
+  </script>
 
   <script src="/app.js"></script>
 
