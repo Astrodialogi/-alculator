@@ -3,10 +3,103 @@ const $ = id => document.getElementById(id);
 
 let place = null;
 let timer = null;
+let calculating = false;
+let searchVersion = 0;
 
 const zodiac = [
   '♈', '♉', '♊', '♋', '♌', '♍',
   '♎', '♏', '♐', '♑', '♒', '♓'
+];
+
+const signNames = [
+  'Овне',
+  'Тельце',
+  'Близнецах',
+  'Раке',
+  'Льве',
+  'Деве',
+  'Весах',
+  'Скорпионе',
+  'Стрельце',
+  'Козероге',
+  'Водолее',
+  'Рыбах'
+];
+
+const descriptions = [
+
+  // ОВЕН
+  {
+    ruler: 'Марс',
+    text: 'Асцендент в Овне связан с инициативностью, самостоятельностью и стремлением действовать. В новых обстоятельствах такой человек склонен проявлять активность и самостоятельно определять направление движения.'
+  },
+
+  // ТЕЛЕЦ
+  {
+    ruler: 'Венера',
+    text: 'Асцендент в Тельце связан со стремлением к устойчивости, определённости и комфорту. Такой человек предпочитает осваивать окружающий мир в собственном темпе, опираясь на практический опыт.'
+  },
+
+  // БЛИЗНЕЦЫ
+  {
+    ruler: 'Меркурий',
+    text: 'Асцендент в Близнецах связан с любознательностью, общением и поиском информации. Взаимодействие с окружающим миром происходит через наблюдение, обучение, обмен идеями и установление новых связей.'
+  },
+
+  // РАК
+  {
+    ruler: 'Луна',
+    text: 'Асцендент в Раке связан с восприимчивостью к окружающей атмосфере и потребностью в эмоциональной безопасности. В новых обстоятельствах человек может сначала присматриваться к происходящему и только потом включаться в ситуацию.'
+  },
+
+  // ЛЕВ
+  {
+    ruler: 'Солнце',
+    text: 'Асцендент во Льве связан со стремлением проявлять индивидуальность, творчески выражать себя и занимать собственное место в окружающем мире.'
+  },
+
+  // ДЕВА
+  {
+    ruler: 'Меркурий',
+    text: 'Асцендент в Деве связан с наблюдательностью, вниманием к деталям и стремлением разобраться в устройстве окружающего мира. Такой человек склонен анализировать происходящее и искать практические решения.'
+  },
+
+  // ВЕСЫ
+  {
+    ruler: 'Венера',
+    text: 'Асцендент в Весах связан с ориентацией на взаимодействие, сотрудничество и поиск равновесия. Важную роль в восприятии мира могут играть отношения, эстетика и способность учитывать разные точки зрения.'
+  },
+
+  // СКОРПИОН
+  {
+    ruler: 'Марс',
+    text: 'Асцендент в Скорпионе связан со стремлением проникать в суть происходящего, исследовать скрытые процессы и проверять границы возможного. Такой человек может внимательно относиться к вопросам доверия и контроля.'
+  },
+
+  // СТРЕЛЕЦ
+  {
+    ruler: 'Юпитер',
+    text: 'Асцендент в Стрельце связан со стремлением расширять горизонты, приобретать новый опыт и искать смысл происходящего. Важную роль могут играть путешествия, образование и знакомство с другими культурами.'
+  },
+
+  // КОЗЕРОГ
+  {
+    ruler: 'Сатурн',
+    text: 'Асцендент в Козероге связан со стремлением выстраивать собственную жизнь, опираясь на последовательность, ответственность и понимание реальных возможностей. Такой человек может воспринимать окружающий мир через задачи, цели и необходимость постепенно осваивать новые уровни самостоятельности.'
+  },
+
+  // ВОДОЛЕЙ
+  {
+    ruler: 'Сатурн',
+    text: 'Асцендент в Водолее связан с самостоятельностью мышления, интересом к устройству общества и стремлением сохранять собственную позицию. Такой человек может искать нестандартные способы взаимодействия с окружающим миром.'
+  },
+
+  // РЫБЫ
+  {
+    ruler: 'Юпитер',
+    text: 'Асцендент в Рыбах связан с восприимчивостью, воображением и способностью замечать тонкие особенности окружающей среды. Восприятие происходящего может опираться на образы, ассоциации и эмоциональные впечатления.'
+  }
+
 ];
 
 const dateParts = ['day', 'month', 'year'];
@@ -16,151 +109,6 @@ const allParts = [...dateParts, ...timeParts];
 function pad(n) {
   return String(n).padStart(2, '0');
 }
-
-// Автоматический переход между полями
-for (const id of allParts) {
-  const el = $(id);
-
-  el.addEventListener('input', () => {
-    el.value = el.value.replace(/\D/g, '');
-
-    if (el.value.length === el.maxLength) {
-      const index = allParts.indexOf(id);
-      const next = allParts[index + 1];
-
-      if (next && !$(next).disabled) {
-        $(next).focus();
-      }
-    }
-  });
-}
-
-// Проверка даты рождения
-function getBirthDate() {
-  const dayText = $('day').value;
-  const monthText = $('month').value;
-  const yearText = $('year').value;
-
-  if (!dayText || !monthText || yearText.length !== 4) {
-    throw Error('Введи полную дату рождения.');
-  }
-
-  const d = Number(dayText);
-  const m = Number(monthText);
-  const y = Number(yearText);
-
-  if (y < 1 || y > 9999 || m < 1 || m > 12 || d < 1) {
-    throw Error('Проверь дату рождения.');
-  }
-
-  const leap = y % 4 === 0 &&
-    (y % 100 !== 0 || y % 400 === 0);
-
-  const days = [
-    31, leap ? 29 : 28, 31, 30,
-    31, 30, 31, 31, 30, 31, 30, 31
-  ];
-
-  if (d > days[m - 1]) {
-    throw Error('Такой даты не существует.');
-  }
-
-  return `${String(y).padStart(4, '0')}-${pad(m)}-${pad(d)}`;
-}
-
-// Время рождения в 24-часовом формате
-function getBirthTime() {
-  if ($('unknown').checked) return null;
-
-  const hourText = $('hour').value;
-  const minuteText = $('minute').value;
-
-  if (!hourText || !minuteText) {
-    throw Error('Введи время рождения.');
-  }
-
-  const h = Number(hourText);
-  const m = Number(minuteText);
-
-  if (h < 0 || h > 23 || m < 0 || m > 59) {
-    throw Error('Время должно быть от 00:00 до 23:59.');
-  }
-
-  return `${pad(h)}:${pad(m)}`;
-}
-
-// Неизвестное время рождения
-$('unknown').addEventListener('change', () => {
-  const yes = $('unknown').checked;
-
-  for (const id of timeParts) {
-    $(id).disabled = yes;
-    $(id).required = !yes;
-  }
-
-  $('timeHelp').hidden = !yes;
-
-  $('submit').textContent = yes
-    ? 'Рассчитать планеты'
-    : 'Рассчитать Асцендент';
-});
-
-// Поиск города через GeoNames
-$('city').addEventListener('input', () => {
-  place = null;
-  $('selected').textContent = '';
-  $('error').textContent = '';
-
-  clearTimeout(timer);
-
-  const q = $('city').value.trim();
-  $('suggestions').replaceChildren();
-
-  if (q.length < 2) return;
-
-  timer = setTimeout(async () => {
-    try {
-      const r = await fetch(
-        '/api/places?q=' + encodeURIComponent(q)
-      );
-
-      const data = await r.json();
-
-      if (!r.ok) {
-        throw Error(data.error || 'Поиск города недоступен');
-      }
-
-      if ($('city').value.trim() !== q) return;
-
-      for (const p of data.places || []) {
-        const b = document.createElement('button');
-        b.type = 'button';
-
-        b.textContent = [
-          p.name,
-          p.admin1,
-          p.country
-        ].filter(Boolean).join(', ');
-
-        b.addEventListener('click', () => {
-          place = p;
-          $('city').value = b.textContent;
-
-          $('selected').textContent =
-            'Город выбран: ' + b.textContent;
-
-          $('suggestions').replaceChildren();
-        });
-
-        $('suggestions').append(b);
-      }
-    } catch (e) {
-      if ($('city').value.trim() === q) {
-        $('error').textContent = e.message;
-      }
-    }
-  }, 350);
-});
 
 function fmt(p) {
   return `${p.degree}° ${pad(p.minute)}′`;
@@ -179,143 +127,718 @@ function escapeHTML(s) {
   );
 }
 
-// Расчёт
-$('form').addEventListener('submit', async e => {
-  e.preventDefault();
+
+// =========================================
+// АВТОМАТИЧЕСКИЙ ПЕРЕХОД МЕЖДУ ПОЛЯМИ
+// =========================================
+
+for (const id of allParts) {
+
+  const el = $(id);
+
+  el.addEventListener('input', () => {
+
+    el.value = el.value
+      .replace(/\D/g, '')
+      .slice(0, el.maxLength);
+
+    if (el.value.length === el.maxLength) {
+
+      const index = allParts.indexOf(id);
+      const next = allParts[index + 1];
+
+      if (next && !$(next).disabled) {
+        $(next).focus();
+      } else if (id === 'minute') {
+        $('city').focus();
+      }
+
+    }
+
+  });
+
+}
+
+
+// =========================================
+// ПРОВЕРКА ДАТЫ РОЖДЕНИЯ
+// =========================================
+
+function getBirthDate() {
+
+  const dayText = $('day').value;
+  const monthText = $('month').value;
+  const yearText = $('year').value;
+
+  if (
+    !dayText ||
+    !monthText ||
+    yearText.length !== 4
+  ) {
+    throw Error('Введи полную дату рождения.');
+  }
+
+  const d = Number(dayText);
+  const m = Number(monthText);
+  const y = Number(yearText);
+
+  if (
+    y < 1 ||
+    y > 9999 ||
+    m < 1 ||
+    m > 12 ||
+    d < 1
+  ) {
+    throw Error('Проверь дату рождения.');
+  }
+
+  const leap =
+    y % 4 === 0 &&
+    (y % 100 !== 0 || y % 400 === 0);
+
+  const days = [
+    31, leap ? 29 : 28, 31, 30,
+    31, 30, 31, 31, 30, 31, 30, 31
+  ];
+
+  if (d > days[m - 1]) {
+    throw Error('Такой даты не существует.');
+  }
+
+  return `${String(y).padStart(4, '0')}-${pad(m)}-${pad(d)}`;
+
+}
+
+
+// =========================================
+// ПРОВЕРКА ВРЕМЕНИ РОЖДЕНИЯ
+// =========================================
+
+function getBirthTime() {
+
+  if ($('unknown').checked) {
+    throw Error(
+      'Для расчёта Асцендента необходимо точное время рождения.'
+    );
+  }
+
+  const hourText = $('hour').value;
+  const minuteText = $('minute').value;
+
+  if (!hourText || !minuteText) {
+    throw Error('Введи время рождения.');
+  }
+
+  const h = Number(hourText);
+  const m = Number(minuteText);
+
+  if (
+    h < 0 ||
+    h > 23 ||
+    m < 0 ||
+    m > 59
+  ) {
+    throw Error(
+      'Время должно быть от 00:00 до 23:59.'
+    );
+  }
+
+  return `${pad(h)}:${pad(m)}`;
+
+}
+
+
+// =========================================
+// НЕИЗВЕСТНОЕ ВРЕМЯ РОЖДЕНИЯ
+// =========================================
+
+function updateUnknownTime() {
+
+  const yes = $('unknown').checked;
+
+  for (const id of timeParts) {
+
+    $(id).disabled = yes;
+    $(id).required = !yes;
+
+  }
+
+  $('timeHelp').hidden = !yes;
+
+  $('submit').hidden = yes;
+  $('submit').disabled = yes || calculating;
 
   $('error').textContent = '';
-  $('result').hidden = true;
 
-  const b = $('submit');
+}
 
-  try {
-    const birthDate = getBirthDate();
-    const birthTime = getBirthTime();
+$('unknown').addEventListener(
+  'change',
+  updateUnknownTime
+);
 
-    if (!place) {
-      throw Error('Выбери город из выпадающего списка.');
+updateUnknownTime();
+
+
+// =========================================
+// ПОИСК ГОРОДА ЧЕРЕЗ GEONAMES
+// =========================================
+
+$('city').addEventListener('input', () => {
+
+  place = null;
+
+  $('selected').textContent = '';
+  $('error').textContent = '';
+
+  clearTimeout(timer);
+
+  const version = ++searchVersion;
+  const q = $('city').value.trim();
+
+  $('suggestions').replaceChildren();
+
+  if (q.length < 2) return;
+
+  timer = setTimeout(async () => {
+
+    try {
+
+      const r = await fetch(
+        '/api/places?q=' + encodeURIComponent(q)
+      );
+
+      const data = await r.json();
+
+      if (
+        version !== searchVersion ||
+        $('city').value.trim() !== q
+      ) return;
+
+      if (!r.ok) {
+
+        throw Error(
+          data.error || 'Поиск города недоступен'
+        );
+
+      }
+
+      const places = data.places || [];
+
+      if (!places.length) {
+
+        const message = document.createElement('p');
+
+        message.className = 'hint';
+
+        message.textContent =
+          'Город не найден. Попробуй другое написание.';
+
+        $('suggestions').append(message);
+
+        return;
+
+      }
+
+      for (const p of places) {
+
+        const b = document.createElement('button');
+
+        b.type = 'button';
+
+        b.textContent = [
+          p.name,
+          p.admin1,
+          p.country
+        ].filter(Boolean).join(', ');
+
+        b.addEventListener('click', () => {
+
+          place = p;
+
+          searchVersion++;
+
+          $('city').value = b.textContent;
+
+          $('selected').textContent =
+            'Город выбран: ' + b.textContent;
+
+          $('suggestions').replaceChildren();
+
+          $('error').textContent = '';
+
+        });
+
+        $('suggestions').append(b);
+
+      }
+
+    } catch (e) {
+
+      if (version === searchVersion) {
+
+        $('error').textContent = e.message;
+
+      }
+
     }
 
-    b.disabled = true;
-    b.textContent = 'Рассчитываем…';
+  }, 350);
 
-    const r = await fetch('/api/calculate', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        date: birthDate,
-        time: birthTime,
-        lat: place.lat,
-        lng: place.lng
-      })
-    });
+});
 
-    const data = await r.json();
 
-    if (!r.ok) {
-      throw Error(data.error || 'Ошибка расчёта');
-    }
+// =========================================
+// ТАБЛИЦА ПЛАНЕТ И ТОЧЕК
+// =========================================
 
-    const root = $('result');
-    const asc = data.ascendant;
+function buildPlanetsTable(data) {
 
-    let html = asc
-      ? `<div class="result-head">
-          <div class="symbol">${zodiac[asc.sign_index]}</div>
-          <div>
-            <small>ТВОЙ АСЦЕНДЕНТ</small>
-            <h2>${escapeHTML(asc.sign)}</h2>
-            <p>${fmt(asc)} ${escapeHTML(asc.sign)}</p>
-          </div>
-        </div>
-        <p class="note">
-          Для ежемесячных прогнозов по Асценденту
-          выбирай знак <b>${escapeHTML(asc.sign)}</b>.
-        </p>`
-      : `<h2>Твои планеты</h2>
-        <p class="note">
-          Время рождения неизвестно:
-          Асцендент и дома не рассчитаны.
-          Если планета могла сменить знак за день,
-          показаны возможные варианты.
-        </p>`;
+  let html = `
+    <table>
+      <tbody>
+  `;
 
-    html += `<details ${!asc ? 'open' : ''}>
-      <summary>Посмотреть положения всех планет</summary>
-      <table><tbody>`;
+  for (const p of data.planets || []) {
 
-    for (const p of data.planets) {
-      const sign = p.sign_uncertain
-        ? p.possible_signs.join(' / ')
-        : p.sign;
+    const sign = p.sign_uncertain
+      ? p.possible_signs.join(' / ')
+      : p.sign;
 
-      const degree = data.time_known
-        ? ' · ' + fmt(p)
+    const degree = data.time_known
+      ? ' · ' + fmt(p)
+      : '';
+
+    const house =
+      data.time_known &&
+      p.whole_sign_house != null
+        ? ' · ' + p.whole_sign_house + ' дом'
         : '';
 
-      const house = data.time_known
-        ? ' · ' + p.whole_sign_house + ' дом (Whole Sign)'
-        : '';
+    html += `
+      <tr>
+        <td>
+          ${escapeHTML(p.glyph)}
+          ${escapeHTML(p.name)}
+        </td>
 
-      html += `<tr>
-        <td>${escapeHTML(p.glyph)} ${escapeHTML(p.name)}</td>
         <td>
           ${escapeHTML(sign)}
           ${degree}
           ${p.retrograde ? ' ℞' : ''}
           ${house}
-          ${p.sign_uncertain ? ' ⚠️' : ''}
         </td>
-      </tr>`;
-    }
+      </tr>
+    `;
 
-    html += '</tbody></table>';
+  }
 
-    if (!data.time_known) {
-      html += `<p class="hint">
-        Без времени рождения градусы не указываются.
-        Знаки проверены на протяжении местных суток.
-      </p>`;
-    }
+  if (data.ascendant) {
 
-    html += '</details>';
+    html += `
+      <tr>
+        <td>ASC</td>
+        <td>
+          ${escapeHTML(data.ascendant.sign)}
+          · ${fmt(data.ascendant)}
+        </td>
+      </tr>
+    `;
 
-    if (asc) {
-      html += `<details>
-        <summary>Технические данные</summary>
-        <p>MC: ${escapeHTML(data.mc.sign)}
-        ${fmt(data.mc)}</p>
-        <p>
-          Система домов для таблицы: Whole Sign.
-          Расчёт куспидов Плацидуса доступен
-          в вычислительном модуле.
-        </p>
-      </details>`;
-    }
+  }
 
-    html += `<p>
-      <a href="https://taplink.cc/alisa.astrologia">
+  if (data.mc) {
+
+    html += `
+      <tr>
+        <td>MC</td>
+        <td>
+          ${escapeHTML(data.mc.sign)}
+          · ${fmt(data.mc)}
+        </td>
+      </tr>
+    `;
+
+  }
+
+  html += `
+      </tbody>
+    </table>
+
+    <p class="hint">
+      Тропический зодиак.
+      Система домов: Whole Sign
+      (целознаковая система).
+    </p>
+  `;
+
+  return html;
+
+}
+
+
+// =========================================
+// ЭКРАН РЕЗУЛЬТАТА
+// =========================================
+
+function showResult(data) {
+
+  const root = $('result');
+  const asc = data.ascendant;
+
+  if (!asc) {
+
+    throw Error(
+      'Не удалось определить Асцендент. Проверь данные рождения.'
+    );
+
+  }
+
+  const index = Number(asc.sign_index);
+  const description = descriptions[index];
+
+  if (!description) {
+    throw Error('Не удалось определить знак Асцендента.');
+  }
+
+  const sign = escapeHTML(asc.sign);
+  const signName = signNames[index];
+
+  root.innerHTML = `
+
+    <button
+      type="button"
+      id="backToCalculator"
+      class="back-button">
+
+      ← Изменить данные
+
+    </button>
+
+
+    <!-- КАРТОЧКА АСЦЕНДЕНТА -->
+
+    <section class="result-card">
+
+      <div class="result-head">
+
+        <div class="symbol">
+          ${zodiac[index]}&#xFE0E;
+        </div>
+
+        <div>
+
+          <small>ТВОЙ АСЦЕНДЕНТ</small>
+
+          <h2>${sign}</h2>
+
+          <p>${fmt(asc)}</p>
+
+        </div>
+
+      </div>
+
+      <p class="note">
+
+        Для ежемесячных прогнозов
+        по Асценденту выбирай знак
+        <strong>${sign}</strong>.
+
+      </p>
+
+    </section>
+
+
+    <!-- ОПИСАНИЕ АСЦЕНДЕНТА -->
+
+    <section class="description-card">
+
+      <h2>
+        Асцендент в ${signName}
+      </h2>
+
+      <p>
+        ${escapeHTML(description.text)}
+      </p>
+
+      <p>
+
+        <strong>Управитель Асцендента:</strong>
+        ${escapeHTML(description.ruler)}.
+
+      </p>
+
+      <p class="hint">
+
+        Это общая астрологическая характеристика.
+        Для индивидуальной интерпретации важно
+        учитывать положение управителя Асцендента,
+        планеты в первом доме и аспекты.
+
+      </p>
+
+    </section>
+
+
+    <!-- ПРЕДЛОЖЕНИЕ ПОСМОТРЕТЬ ПЛАНЕТЫ -->
+
+    <section class="chart-card">
+
+      <div class="chart-preview">
+
+        <svg
+          class="chart-icon"
+          viewBox="0 0 100 100"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.8"
+          aria-hidden="true">
+
+          <circle cx="50" cy="50" r="46"/>
+          <circle cx="50" cy="50" r="32"/>
+          <circle cx="50" cy="50" r="15"/>
+
+          <path d="
+            M50 4V35
+            M50 65V96
+            M4 50H35
+            M65 50H96
+            M27 10L42 37
+            M58 63L73 90
+            M10 27L37 42
+            M63 58L90 73
+            M73 10L58 37
+            M42 63L27 90
+            M90 27L63 42
+            M37 58L10 73
+          "/>
+
+        </svg>
+
+        <div>
+
+          <h2>
+            Узнай больше о своей натальной карте
+          </h2>
+
+          <p>
+
+            Посмотри, в каких знаках и домах
+            находятся твои планеты и основные
+            астрологические точки.
+
+          </p>
+
+        </div>
+
+      </div>
+
+      <button
+        type="button"
+        id="showPlanets"
+        class="primary-button"
+        aria-expanded="false"
+        aria-controls="planetsPanel">
+
+        Посмотреть планеты и точки →
+
+      </button>
+
+    </section>
+
+
+    <!-- ПОЛОЖЕНИЯ ПЛАНЕТ -->
+
+    <section
+      id="planetsPanel"
+      class="planets-card"
+      hidden>
+
+      <h2>Твои планеты и точки</h2>
+
+      ${buildPlanetsTable(data)}
+
+    </section>
+
+
+    <!-- КОНСУЛЬТАЦИЯ -->
+
+    <section class="description-card">
+
+      <h2>
+        Хочешь разобраться в своей карте глубже?
+      </h2>
+
+      <p>
+
+        На индивидуальной консультации
+        мы можем разобрать твою натальную карту,
+        особенности характера, отношения,
+        профессиональную реализацию
+        или прогноз на ближайший год.
+
+      </p>
+
+      <a
+        class="secondary-button"
+        href="https://taplink.cc/alisa.astrologia">
+
         Персональные консультации →
+
       </a>
-    </p>`;
 
-    root.innerHTML = html;
-    root.hidden = false;
+    </section>
 
-    root.scrollIntoView({
-      behavior: 'smooth',
-      block: 'start'
+  `;
+
+  $('calculatorScreen').hidden = true;
+
+  root.hidden = false;
+
+
+  // Возвращение к форме
+
+  $('backToCalculator').addEventListener(
+    'click',
+    () => {
+
+      root.hidden = true;
+
+      $('calculatorScreen').hidden = false;
+
+      window.scrollTo({
+        top: 0,
+        behavior: 'smooth'
+      });
+
+    }
+  );
+
+
+  // Открытие таблицы планет
+
+  $('showPlanets').addEventListener(
+    'click',
+    () => {
+
+      const panel = $('planetsPanel');
+      const button = $('showPlanets');
+
+      const opening = panel.hidden;
+
+      panel.hidden = !opening;
+
+      button.setAttribute(
+        'aria-expanded',
+        String(opening)
+      );
+
+      button.textContent = opening
+        ? 'Скрыть положения планет'
+        : 'Посмотреть планеты и точки →';
+
+      if (opening) {
+
+        panel.scrollIntoView({
+          behavior: 'smooth',
+          block: 'start'
+        });
+
+      }
+
+    }
+  );
+
+  window.scrollTo({
+    top: 0,
+    behavior: 'smooth'
+  });
+
+}
+
+
+// =========================================
+// РАСЧЁТ АСЦЕНДЕНТА
+// =========================================
+
+$('form').addEventListener('submit', async e => {
+
+  e.preventDefault();
+
+  if (calculating || $('unknown').checked) {
+    return;
+  }
+
+  $('error').textContent = '';
+
+  const b = $('submit');
+
+  try {
+
+    const birthDate = getBirthDate();
+    const birthTime = getBirthTime();
+
+    if (!place) {
+
+      throw Error(
+        'Выбери город из выпадающего списка.'
+      );
+
+    }
+
+    calculating = true;
+
+    b.disabled = true;
+
+    $('unknown').disabled = true;
+
+    b.textContent = 'Рассчитываем…';
+
+    const r = await fetch('/api/calculate', {
+
+      method: 'POST',
+
+      headers: {
+        'Content-Type': 'application/json'
+      },
+
+      body: JSON.stringify({
+
+        date: birthDate,
+        time: birthTime,
+        lat: place.lat,
+        lng: place.lng
+
+      })
+
     });
 
-  } catch (err) {
-    $('error').textContent = err.message;
-  } finally {
-    b.disabled = false;
-    b.textContent = $('unknown').checked
-      ? 'Рассчитать планеты'
-      : 'Рассчитать Асцендент';
-  }
-});
+    const data = await r.json();
 
+    if (!r.ok) {
+
+      throw Error(
+        data.error || 'Ошибка расчёта'
+      );
+
+    }
+
+    showResult(data);
+
+  } catch (err) {
+
+    $('error').textContent = err.message;
+
+  } finally {
+
+    calculating = false;
+
+    $('unknown').disabled = false;
+
+    b.disabled = $('unknown').checked;
+
+    b.textContent = 'Рассчитать Асцендент';
+
+  }
+
+});
