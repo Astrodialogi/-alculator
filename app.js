@@ -59,7 +59,7 @@ const page = Object.prototype.hasOwnProperty.call(
 ) ? route : 'ascendant';
 
 const needsTime = [
-  'ascendant', 'mc', 'natal'
+  'ascendant', 'mc'
 ].includes(page);
 
 const buttonText =
@@ -1751,4 +1751,832 @@ $('form').addEventListener(
 // ЗАПУСК ПРИЛОЖЕНИЯ
 // =========================================
 
+
+// =========================================
+// ASTRODIALOGI — COSMOGRAM INTERFACE V3
+// =========================================
+
+
+// РЕТРОГРАДНОСТЬ
+
+function motionMark(p, data) {
+
+  if (known(data)) {
+    return p.retrograde ? ' ℞' : '';
+  }
+
+  if (p.motion_uncertain) {
+    return ' ℞?';
+  }
+
+  if (p.possible_motion?.length === 1) {
+
+    return p.possible_motion[0] === 'retrograde'
+      ? ' ℞'
+      : '';
+
+  }
+
+  return '';
+
+}
+
+
+// ВОЗМОЖНЫЕ ЗНАКИ
+
+function possibleSigns(p) {
+
+  return p.possible_signs?.length
+    ? p.possible_signs
+    : [p.sign];
+
+}
+
+
+// ФОРМАТ ПОЛОЖЕНИЯ
+
+position = function(p, data) {
+
+  const sign = known(data)
+    ? p.sign
+    : possibleSigns(p).join(' / ');
+
+  return escapeHTML(sign) +
+
+    (known(data)
+      ? ' · ' + fmt(p)
+      : '') +
+
+    motionMark(p, data);
+
+};
+
+
+// ВРЕМЯ ИНГРЕССИИ
+
+function ingressDetails(p) {
+
+  const ingresses = p.ingresses || [];
+
+  if (!ingresses.length) return '';
+
+  return ingresses.map(i => `
+
+    <div style="
+      padding:12px 0;
+      border-bottom:1px solid var(--border);
+      font-size:14px;
+      line-height:1.6;
+    ">
+
+      <strong style="color:var(--accent)">
+        ${escapeHTML(i.local_time)}
+      </strong>
+
+      · ${escapeHTML(i.from_sign)}
+      → ${escapeHTML(i.to_sign)}
+
+      ${i.retrograde ? ' ℞' : ''}
+
+    </div>
+
+  `).join('');
+
+}
+
+
+// ПОЯСНЕНИЯ К ПОЛОЖЕНИЮ ПЛАНЕТЫ
+
+function cosmogramDetails(p) {
+
+  let html = '';
+
+  if (p.sign_uncertain) {
+
+    html += `
+
+      <div class="note">
+
+        <strong>
+          Возможны несколько знаков
+        </strong>
+
+        <p style="margin:8px 0">
+
+          В день твоего рождения планета
+          меняла знак зодиака.
+
+          Даже приблизительное время
+          рождения поможет уточнить
+          её положение.
+
+        </p>
+
+        ${ingressDetails(p)}
+
+        ${p.ingresses?.length ? `
+
+          <p class="hint"
+             style="margin-top:12px">
+
+            Указано местное время
+            города рождения.
+
+          </p>
+
+        ` : ''}
+
+      </div>
+
+    `;
+
+  } else {
+
+    html += `
+
+      <p class="note">
+
+        На протяжении всего дня
+        твоего рождения планета
+        находилась в одном знаке.
+
+        Точный градус зависит
+        от времени рождения.
+
+      </p>
+
+    `;
+
+  }
+
+
+  if (p.motion_uncertain) {
+
+    html += `
+
+      <p class="note">
+
+        <strong>
+          Смена направления движения
+        </strong>
+
+        <br>
+
+        В день твоего рождения
+        планета меняла направление
+        движения.
+
+        Без времени рождения нельзя
+        однозначно определить,
+        была ли она ретроградной.
+
+      </p>
+
+    `;
+
+  } else if (
+    p.possible_motion?.length === 1 &&
+    p.possible_motion[0] === 'retrograde'
+  ) {
+
+    html += `
+
+      <p class="note">
+
+        <strong>
+          Ретроградная планета ℞
+        </strong>
+
+        <br>
+
+        Планета была ретроградной
+        на протяжении всего дня
+        твоего рождения.
+
+      </p>
+
+    `;
+
+  }
+
+  return html;
+
+}
+
+
+// =========================================
+// КНОПКА РАСЧЁТА
+// =========================================
+
+function currentButtonText() {
+
+  if (page === 'natal') {
+
+    return $('unknown').checked
+
+      ? 'Построить космограмму'
+
+      : 'Построить натальную карту';
+
+  }
+
+  return buttonText;
+
+}
+
+
+function syncCosmogramForm() {
+
+  const unknown = $('unknown').checked;
+
+  const submit = $('submit');
+
+  if (!calculating) {
+
+    submit.textContent =
+      currentButtonText();
+
+  }
+
+  // Исправляем старое правило CSS,
+  // которое скрывало кнопку расчёта.
+
+  if (unknown && !needsTime) {
+
+    submit.style.setProperty(
+      'display',
+      'flex',
+      'important'
+    );
+
+  } else {
+
+    submit.style.removeProperty(
+      'display'
+    );
+
+  }
+
+
+  if (page === 'natal') {
+
+    $('calculatorTitle').textContent =
+
+      unknown
+
+        ? 'Построй свою космограмму'
+
+        : 'Построй свою натальную карту';
+
+  }
+
+
+  if (unknown && !needsTime) {
+
+    $('unknownTimeNote').textContent =
+
+      'Без времени рождения можно рассчитать положения планет в знаках зодиака и их ретроградность. Если планета меняла знак или направление движения в течение суток, мы покажем возможные варианты.';
+
+  }
+
+}
+
+
+$('unknown').addEventListener(
+  'change',
+  syncCosmogramForm
+);
+
+
+// =========================================
+// ТАБЛИЦА КОСМОГРАММЫ
+// =========================================
+
+const originalPlanetsTable =
+  buildPlanetsTable;
+
+
+buildPlanetsTable = function(data, system) {
+
+  // Натальная карта:
+  // сохраняем прежнюю таблицу.
+
+  if (known(data)) {
+
+    return originalPlanetsTable(
+      data,
+      system
+    );
+
+  }
+
+
+  // Космограмма:
+  // только планеты и знаки.
+
+  return `
+
+    <table>
+
+      <thead>
+
+        <tr>
+
+          <th>Планета</th>
+
+          <th style="
+            width:60%;
+            text-align:left;
+          ">
+
+            Знак зодиака
+
+          </th>
+
+        </tr>
+
+      </thead>
+
+      <tbody>
+
+        ${(data.planets || []).map(p => {
+
+          const key = keyFor(p.name);
+
+          return `
+
+            <tr>
+
+              <td>
+
+                <span class="planet-glyph">
+
+                  ${escapeHTML(
+                    glyphs[key] || p.glyph
+                  )}&#xFE0E;
+
+                </span>
+
+                ${link(key, p.name)}
+
+              </td>
+
+              <td style="
+                width:60%;
+                text-align:left;
+                white-space:normal;
+              ">
+
+                ${position(p, data)}
+
+                ${p.sign_uncertain ? `
+
+                  <div class="hint"
+                       style="margin-top:4px">
+
+                    Смена знака в течение суток
+
+                  </div>
+
+                ` : ''}
+
+                ${p.motion_uncertain ? `
+
+                  <div class="hint"
+                       style="margin-top:4px">
+
+                    Смена направления движения
+
+                  </div>
+
+                ` : ''}
+
+              </td>
+
+            </tr>
+
+          `;
+
+        }).join('')}
+
+      </tbody>
+
+    </table>
+
+
+    <p class="hint">
+
+      ℞ — ретроградная планета.
+
+      <br>
+
+      ℞? — направление движения
+      требует уточнения.
+
+    </p>
+
+
+    <p class="hint">
+
+      Нажми на название планеты,
+      чтобы узнать больше
+      о её положении.
+
+    </p>
+
+
+    <p class="hint">
+
+      Тропический зодиак.
+
+      Без времени рождения
+      точные градусы, Асцендент,
+      MC, дома и аспекты
+      не отображаются.
+
+    </p>
+
+  `;
+
+};
+
+
+// =========================================
+// УТОЧНЕНИЕ ВРЕМЕНИ РОЖДЕНИЯ
+// =========================================
+
+function clarifyBirthTime() {
+
+  $('result').hidden = true;
+
+  $('homeScreen').hidden = true;
+
+  $('calculatorScreen').hidden = false;
+
+  $('unknown').checked = false;
+
+  updateUnknownTime();
+
+  syncCosmogramForm();
+
+  $('hour').value = '';
+
+  $('minute').value = '';
+
+  window.scrollTo(0, 0);
+
+  $('hour').focus();
+
+}
+
+
+// =========================================
+// ЭКРАН РЕЗУЛЬТАТА
+// =========================================
+
+const originalShowResult = showResult;
+
+
+showResult = function(data) {
+
+  // Сначала используем
+  // существующий экран результата.
+
+  originalShowResult(data);
+
+
+  // Натальную карту не изменяем.
+
+  if (known(data)) return;
+
+
+  const root = $('result');
+
+  const resultCard =
+    root.querySelector('.result-card');
+
+
+  if (!resultCard) return;
+
+
+  // КОСМОГРАММА
+
+  if (page === 'natal') {
+
+    resultCard.innerHTML = `
+
+      <h2>Твоя космограмма</h2>
+
+      <p>
+
+        Положения планет
+        в знаках зодиака
+        на день твоего рождения.
+
+      </p>
+
+      <p class="note">
+
+        Космограмма строится
+        без точного времени рождения.
+
+        Она позволяет определить
+        возможные знаки планет
+        и их направление движения.
+
+        Асцендент, MC и дома
+        без времени рождения
+        определить нельзя.
+
+      </p>
+
+    `;
+
+  } else {
+
+    // ОТДЕЛЬНАЯ ПЛАНЕТА
+
+    const p = getPoint(data);
+
+    if (!p) return;
+
+    const signs = possibleSigns(p);
+
+    resultCard.innerHTML = `
+
+      <div class="result-head">
+
+        <div class="symbol">
+
+          ${escapeHTML(
+            glyphs[page]
+          )}&#xFE0E;
+
+        </div>
+
+        <div>
+
+          <small>
+
+            ${escapeHTML(
+              pages[page].toUpperCase()
+            )}
+
+          </small>
+
+          <h2 style="
+            font-size:${signs.length > 1
+              ? '24px'
+              : '30px'};
+          ">
+
+            ${escapeHTML(
+              signs.join(' / ')
+            )}
+
+            ${motionMark(p, data)}
+
+          </h2>
+
+          <p style="font-size:14px">
+
+            Без точного времени рождения
+
+          </p>
+
+        </div>
+
+      </div>
+
+      ${cosmogramDetails(p)}
+
+    `;
+
+  }
+
+
+  // КНОПКА УТОЧНЕНИЯ ВРЕМЕНИ
+
+  const clarify = document.createElement(
+    'button'
+  );
+
+  clarify.type = 'button';
+
+  clarify.className = 'secondary-button';
+
+  clarify.style.marginTop = '20px';
+
+  clarify.textContent =
+    'Уточнить время рождения →';
+
+  clarify.addEventListener(
+    'click',
+    clarifyBirthTime
+  );
+
+  resultCard.append(clarify);
+
+
+  // ЗАГОЛОВОК ТАБЛИЦЫ
+
+  const panelTitle = root.querySelector(
+    '#planetsPanel > h2'
+  );
+
+  if (panelTitle) {
+
+    panelTitle.textContent =
+      'Твои планеты в знаках';
+
+  }
+
+
+  // КНОПКА ПОКАЗА ПЛАНЕТ
+
+  const showButton = $('showPlanets');
+
+  if (showButton) {
+
+    showButton.textContent =
+      'Посмотреть все планеты →';
+
+    showButton.addEventListener(
+      'click',
+      () => {
+
+        showButton.textContent =
+
+          $('planetsPanel').hidden
+
+            ? 'Посмотреть все планеты →'
+
+            : 'Скрыть положения планет';
+
+      }
+    );
+
+  }
+
+
+  // ССЫЛКА НА ПОЛНУЮ КОСМОГРАММУ
+
+  if (page !== 'natal') {
+
+    const back = $('backToCalculator');
+
+    const a = document.createElement('a');
+
+    a.href = '/natal';
+
+    a.className = 'back-button';
+
+    a.textContent = '← Вся космограмма';
+
+    back.after(a);
+
+  }
+
+
+  // ОПИСАНИЯ ПЛАНЕТ
+
+  const interpretation =
+    $('planetInterpretation');
+
+  if (interpretation) {
+
+    const heading =
+      interpretation.parentElement
+        .querySelector('h2');
+
+    if (heading) {
+
+      heading.textContent =
+        pages[page] + ' в космограмме';
+
+    }
+
+  }
+
+};
+
+
+// =========================================
+// ПОЯСНЕНИЕ НА СТРАНИЦЕ НАТАЛЬНОЙ КАРТЫ
+// =========================================
+
+function setupCosmogramAbout() {
+
+  if (page !== 'natal' || home) return;
+
+  $('calculatorAbout').innerHTML = `
+
+    <h2>Натальная карта и космограмма</h2>
+
+    <p>
+
+      Натальная карта показывает
+      положения планет, домов
+      и астрологических точек
+      в момент рождения.
+
+    </p>
+
+    <p>
+
+      Если ты не знаешь точного
+      времени рождения, можно
+      построить космограмму.
+
+    </p>
+
+    <p>
+
+      Космограмма показывает
+      положения планет в знаках
+      зодиака без привязки
+      к системе домов.
+
+    </p>
+
+    <p>
+
+      Если в день твоего рождения
+      планета меняла знак
+      или направление движения,
+      калькулятор покажет
+      возможные варианты.
+
+    </p>
+
+  `;
+
+}
+
+
+// =========================================
+// ОБНОВЛЕНИЕ КНОПКИ ПОСЛЕ РАСЧЁТА
+// =========================================
+
+const submitObserver = new MutationObserver(
+  () => {
+
+    if (
+      !calculating &&
+      $('submit').textContent !==
+        currentButtonText()
+    ) {
+
+      syncCosmogramForm();
+
+    }
+
+  }
+);
+
+submitObserver.observe(
+  $('submit'),
+  {
+    childList: true,
+    characterData: true,
+    subtree: true
+  }
+);
+
+
+// =========================================
+// ПРОВЕРКА СОХРАНЁННЫХ РЕЗУЛЬТАТОВ
+// =========================================
+
+// Старые космограммы не содержат
+// времени ингрессий и данных
+// о смене направления движения.
+
+if (
+  saved?.data &&
+  !known(saved.data) &&
+  saved.data.chart_type !== 'cosmogram'
+) {
+
+  saved.data = null;
+
+  persist();
+
+}
+
+
+// =========================================
+// ЗАПУСК ОБНОВЛЁННОГО ПРИЛОЖЕНИЯ
+// =========================================
+
 setupPage();
+
+syncCosmogramForm();
+
+setupCosmogramAbout();
+
+
+// =========================================
+// END — COSMOGRAM INTERFACE V3
+// =========================================
+
