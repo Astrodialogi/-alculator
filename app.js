@@ -226,9 +226,10 @@ const planetAbout = {
 
 // Место для будущих авторских интерпретаций.
 
-const interpretations = {
+const interpretations = window.ASTRO_INTERPRETATIONS || {
   signs: {},
-  houses: {}
+  houses: {},
+  retrograde: {}
 };
 
 // =========================================
